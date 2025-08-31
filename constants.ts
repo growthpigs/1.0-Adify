@@ -9,6 +9,10 @@ import {
     UserIcon, AlertTriangleIcon, ChevronsRightIcon, CheckCircleIcon, BookOpenIcon,
     HelpCircleIcon, StarIcon, SearchIcon, UsersIcon, TagIcon, ListIcon, TargetIcon, LeafIcon
 } from './components/Icons';
+import {
+    LaptopIcon, MobileAppIcon, WallpaperIcon, BusinessCardIcon, WebsiteIcon, SmartTVIcon,
+    InstagramIcon, TikTokIcon2, PinterestIcon, DiscordIcon, ShoppingIcon, VideoIcon
+} from './components/NewIcons';
 
 const DESIGN_RULES = `
 IMPORTANT DESIGN RULES:
@@ -132,6 +136,49 @@ export const AD_FORMATS: AdFormat[] = [
     icon: LeafIcon,
     type: 'mockup',
   },
+  // New Strategic Mockup Formats
+  {
+    id: 102,
+    name: 'Laptop Screen Display',
+    prompt: 'Display this product on a modern laptop screen in a clean workspace setting. The laptop should be open on a minimalist desk with soft, professional lighting. Perfect for SaaS, digital products, and software showcases.',
+    icon: LaptopIcon,
+    type: 'mockup',
+  },
+  {
+    id: 103,
+    name: 'Mobile App Interface',
+    prompt: 'Present this product as a mobile app interface on a modern smartphone. The phone should be held in a hand or placed on a clean surface with a blurred background to emphasize the app design.',
+    icon: MobileAppIcon,
+    type: 'mockup',
+  },
+  {
+    id: 104,
+    name: 'Desktop Wallpaper',
+    prompt: 'Create a desktop wallpaper featuring this product as the main visual element. The design should be suitable for computer backgrounds with appropriate resolution and aesthetic appeal.',
+    icon: WallpaperIcon,
+    type: 'mockup',
+  },
+  {
+    id: 105,
+    name: 'Business Card Design',
+    prompt: 'Design a professional business card featuring this product. The card should be displayed in a realistic business setting, perhaps on a desk or being handed between professionals.',
+    icon: BusinessCardIcon,
+    type: 'mockup',
+  },
+  {
+    id: 106,
+    name: 'Website Header Hero',
+    prompt: 'Create a website hero section mockup featuring this product. The design should include navigation elements and be displayed on a laptop or desktop screen to show realistic web usage.',
+    icon: WebsiteIcon,
+    type: 'mockup',
+  },
+  {
+    id: 107,
+    name: 'Smart TV Display',
+    prompt: 'Show this product on a large smart TV screen in a modern living room setting. The TV should be wall-mounted or on a sleek stand with ambient lighting for premium presentation.',
+    icon: SmartTVIcon,
+    type: 'mockup',
+  },
 ];
 
 export const SOCIAL_MEDIA_FORMATS: AdFormat[] = [
@@ -240,6 +287,35 @@ export const SOCIAL_MEDIA_FORMATS: AdFormat[] = [
     icon: InfluencerIcon,
     type: 'social',
   },
+  // New Strategic Social Media Formats
+  {
+    id: 43,
+    name: 'Instagram Feed Post',
+    prompt: `Create a realistic Instagram feed post mockup featuring this product. Include the Instagram UI elements like profile picture, username, caption area, and engagement buttons. The image should look like an authentic lifestyle or product post. ${DESIGN_RULES}`,
+    icon: InstagramIcon,
+    type: 'social',
+  },
+  {
+    id: 44,
+    name: 'TikTok Video Cover',
+    prompt: `Design a TikTok video cover image featuring this product. The layout should match TikTok's vertical video format with overlay UI elements. Include trending hashtags and engagement metrics for authenticity. ${DESIGN_RULES}`,
+    icon: TikTokIcon2,
+    type: 'social',
+  },
+  {
+    id: 45,
+    name: 'Pinterest Pin',
+    prompt: `Create a Pinterest-style pin featuring this product. The image should be vertical (2:3 ratio) with eye-catching graphics and text overlay designed to drive clicks. Include Pinterest UI elements for realism. ${DESIGN_RULES}`,
+    icon: PinterestIcon,
+    type: 'social',
+  },
+  {
+    id: 46,
+    name: 'Discord Embed',
+    prompt: `Design a Discord message embed featuring this product. The embed should include a title, description, and the product image in Discord's distinctive card format with the platform's dark theme. ${DESIGN_RULES}`,
+    icon: DiscordIcon,
+    type: 'social',
+  },
 ];
 
 export const FACEBOOK_AD_FORMATS: AdFormat[] = [
@@ -325,6 +401,28 @@ export const FACEBOOK_AD_FORMATS: AdFormat[] = [
         name: 'The Authority',
         prompt: 'Position the product as the choice of experts. Headline: "Why Experts Are Recommending [Product]". Body: Reference data, awards, or expert opinions. The tone should be credible and authoritative. The image should look professional and trustworthy.',
         icon: TargetIcon,
+        type: 'facebook'
+    },
+    // New Strategic Facebook Ad Formats
+    {
+        id: 47,
+        name: 'Instagram Shopping Ad',
+        prompt: 'Create an Instagram Shopping ad format. Headline: "Shop [Product] Now". Body: Highlight the key features and benefits with a clear call-to-action to "Shop Now" or "Learn More". Include product tags and pricing if applicable. The image should showcase the product in an appealing lifestyle context.',
+        icon: ShoppingIcon,
+        type: 'facebook'
+    },
+    {
+        id: 48,
+        name: 'Video Ad Script',
+        prompt: 'Write a compelling video ad script. Opening Hook: Grab attention in the first 3 seconds with a relatable problem or surprising statement. Middle: Demonstrate the product solving the problem with clear benefits. Closing: Strong call-to-action with urgency. Keep it under 30 seconds for optimal engagement.',
+        icon: VideoIcon,
+        type: 'facebook'
+    },
+    {
+        id: 49,
+        name: 'Carousel Ad Copy',
+        prompt: 'Create carousel ad copy showcasing multiple product features or use cases. Each card should highlight a different benefit or feature. Card 1: Main value proposition. Cards 2-4: Supporting features/benefits. Final card: Strong call-to-action with special offer or incentive.',
+        icon: ChevronsRightIcon,
         type: 'facebook'
     }
 ];

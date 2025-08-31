@@ -1,12 +1,18 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { AdFormat, SloganType, UploadedImage, FacebookAdContent, GeneratedContent, MockupContent } from './types';
+import { AdFormat, SloganType, UploadedImage, FacebookAdContent, GeneratedContent, MockupContent, SmartProductInput } from './types';
 import { generateAdMockup, generateSlogan, editImage, describeImage, generateFacebookAdContent } from './services/geminiService';
+import { generateMockAnalysis, generateNaturalEnvironmentPrompt, getNaturalEnvironmentFormat } from './services/mockIntelligence';
+import { defaultImageBase64, base64ToFile } from './utils/imageUtils';
 import ImageUploader from './components/ImageUploader';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { Sidebar } from './components/Sidebar';
 import { Workspace } from './components/Workspace';
+import { SmartAnalysisPopup } from './components/SmartAnalysisPopup';
+import { SmartProductInput as SmartProductInputComponent } from './components/SmartProductInput';
+import { AnalysisLoader } from './components/AnalysisLoader';
+import { GenerationProgress } from './components/GenerationProgress';
 
 export type LoadingState = 'idle' | 'describing' | 'generating_text' | 'generating_image' | 'editing';
 
@@ -18,8 +24,6 @@ export interface LastGenerationParams {
     selectedImage: UploadedImage;
 }
 
-// Correctly encoded default image from the provided URL.
-const defaultImageBase64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA+gAAAPoCAYAAABNo9TkAAAAAXNSR0IArs4c6QAAAIRlWElmTU0AKgAAAAgABQESAAMAAAABAAEAAAEaAAUAAAABAAAASgEbAAUAAAABAAAAUgEoAAMAAAABAAIAAIdpAAQAAAABAAAAWgAAAAAAAACQAAAAAQAAAJAAAAABAAKgAgAEAAAAAQAAA+igAwAEAAAAAQAAA+gAAAAA06o2bQAAIABJREFUeJzsvQl4XNWZ/3/P1Jk5M5Pdk2xyk2ySLbIlS7Is27IdN4BtxoFhYGA42ADgOAbgPGACh/GAYeAEY8BsnNgxLNmyLcvSJHSTbHJzk5m5J1Pz7/G8r9apmlvdm5ps3u/35Z2qutvVp27d9P7uPffc/2AgAAAAgAAAAEBLxX+uAwAAAACAJgpGAAAAAEAgGDGg5uPjM3LkyO+uAyQAoFLt2rXfXQd44iN48/FxdPjw4RkZGRk/n3vuuYfVd3fDCRkBAAAAAGCAjAAAAAAQCAYMGQAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAAAgEAwYMgAAAA-";
 
 // FIX: Removed invalid text nodes and implemented the full App component.
 export const App: React.FC = () => {
@@ -34,6 +38,22 @@ export const App: React.FC = () => {
     const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
     const [sessionGallery, setSessionGallery] = useState<GeneratedContent[]>([]);
     const [lastGenerationParams, setLastGenerationParams] = useState<LastGenerationParams | null>(null);
+    const [selectedFormat, setSelectedFormat] = useState<AdFormat | null>(null);
+    const [selectedSloganType, setSelectedSloganType] = useState<SloganType | null>(null);
+    
+    // Smart Analysis State
+    const [smartInput, setSmartInput] = useState<SmartProductInput>({
+        title: '',
+        description: '',
+        industry: null,
+        targetAudiences: [],
+        isAnalysisConfirmed: false,
+        analysis: null
+    });
+    const [showAnalysisPopup, setShowAnalysisPopup] = useState(false);
+    const [isNaturalEnvironmentSelected, setIsNaturalEnvironmentSelected] = useState(false);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [selectedFormatsForGeneration, setSelectedFormatsForGeneration] = useState<AdFormat[]>([]);
     
     const generatedContent = history[currentHistoryIndex] ?? null;
     const isContentGenerated = generatedContent !== null;
@@ -43,19 +63,22 @@ export const App: React.FC = () => {
 
     // Default image setup
     useEffect(() => {
-        const init = async () => {
-            const response = await fetch(defaultImageBase64);
-            const blob = await response.blob();
-            const file = new File([blob], "default_product.png", { type: "image/png" });
-            const defaultImage: UploadedImage = {
-                id: 'default-0',
-                file: file,
-                previewUrl: defaultImageBase64
-            };
-            setUploadedImages([defaultImage]);
-            setSelectedImage(defaultImage);
+        const init = () => {
+            try {
+                const file = base64ToFile(defaultImageBase64, "default_product.png");
+                const defaultImage: UploadedImage = {
+                    id: 'default-0',
+                    file: file,
+                    previewUrl: defaultImageBase64
+                };
+                setUploadedImages([defaultImage]);
+                setSelectedImage(defaultImage);
+            } catch (error) {
+                console.error('Failed to load default image:', error);
+                setError('Failed to load default image');
+            }
         };
-        init().catch(console.error);
+        init();
     }, []);
 
     const updateHistory = (newContent: GeneratedContent | null) => {
@@ -65,7 +88,7 @@ export const App: React.FC = () => {
         setCurrentHistoryIndex(newHistory.length - 1);
     };
 
-    const handleImageUpload = useCallback((file: File, previewUrl: string) => {
+    const handleImageUpload = useCallback(async (file: File, previewUrl: string) => {
         const newImage: UploadedImage = {
             id: `${file.name}-${new Date().getTime()}`,
             file,
@@ -78,7 +101,32 @@ export const App: React.FC = () => {
         setError(null);
         setSessionGallery([]);
         setLastGenerationParams(null);
-    }, []);
+        
+        // Trigger smart analysis with loading indicator
+        setIsAnalyzing(true);
+        try {
+            // Add minimum 3-second delay for users to read the loader
+            const [analysis] = await Promise.all([
+                generateMockAnalysis(file, smartInput.description),
+                new Promise(resolve => setTimeout(resolve, 3000))
+            ]);
+            
+            setSmartInput(prev => ({
+                ...prev,
+                title: analysis.suggestedTitle,
+                industry: analysis.detectedIndustry,
+                targetAudiences: analysis.recommendedAudiences,
+                description: prev.description || analysis.userStory,
+                analysis,
+                isAnalysisConfirmed: false
+            }));
+            setShowAnalysisPopup(true);
+        } catch (error) {
+            console.warn('Smart analysis failed:', error);
+        } finally {
+            setIsAnalyzing(false);
+        }
+    }, [smartInput.description]);
 
     const handleGenerateDescription = useCallback(async () => {
         if (!selectedImage) return;
@@ -100,8 +148,57 @@ export const App: React.FC = () => {
         }
     }, [selectedImage, handleGenerateDescription]);
 
-    const handleGenerate = useCallback(async (format: AdFormat, sloganType: SloganType | null) => {
-        if (!selectedImage || !imageDescription) {
+    const handleGenerate = useCallback(async () => {
+        const format = selectedFormat;
+        const sloganType = selectedSloganType;
+        
+        // Use smart input description if available, fallback to legacy field
+        const description = smartInput.description || imageDescription;
+        
+        // Check if Natural Environment is selected
+        if (isNaturalEnvironmentSelected) {
+            // Use Natural Environment format - treat it like any other format
+            const naturalFormat = getNaturalEnvironmentFormat();
+            if (!naturalFormat) {
+                setError("Natural Environment format not available.");
+                return;
+            }
+            
+            // Use the Natural Environment format with its built-in prompt
+            setError(null);
+            setLoadingState('generating_image');
+
+            try {
+                let slogan = '';
+                if (sloganType) {
+                    setLoadingState('generating_text');
+                    slogan = await generateSlogan(selectedImage.file, sloganType);
+                }
+                
+                setLastGenerationParams({ format: naturalFormat, sloganType, slogan, description, selectedImage });
+                setLoadingState('generating_image');
+                
+                const result = await generateAdMockup(selectedImage.file, naturalFormat.prompt, slogan, description);
+                if (!result.imageUrl) throw new Error("Natural environment generation failed.");
+
+                const newContent: MockupContent = { imageUrl: result.imageUrl, slogan };
+                updateHistory(newContent);
+                setSessionGallery(prev => [newContent, ...prev].slice(0, 16));
+            } catch (e: any) {
+                setError(e.message || 'Failed to generate natural environment mockup.');
+                updateHistory(null);
+            } finally {
+                setLoadingState('idle');
+            }
+            return;
+        }
+        
+        if (!format) {
+            setError("Please select an ad format first.");
+            return;
+        }
+        
+        if (!selectedImage || !description) {
             setError("Please upload an image and provide a description first.");
             return;
         }
@@ -117,22 +214,22 @@ export const App: React.FC = () => {
                 slogan = await generateSlogan(selectedImage.file, sloganType);
             }
             
-            setLastGenerationParams({ format, sloganType, slogan, description: imageDescription, selectedImage });
+            setLastGenerationParams({ format, sloganType, slogan, description, selectedImage });
 
             if (format.type === 'mockup' || format.type === 'social') {
                 setLoadingState('generating_image');
-                const result = await generateAdMockup(selectedImage.file, format.prompt, slogan, imageDescription);
+                const result = await generateAdMockup(selectedImage.file, format.prompt, slogan, description);
                 if (!result.imageUrl) throw new Error("Image generation failed to return an image URL.");
                 const newContent: MockupContent = { imageUrl: result.imageUrl, slogan };
                 updateHistory(newContent);
                 setSessionGallery(prev => [newContent, ...prev].slice(0, 16));
             } else if (format.type === 'facebook') {
                 setLoadingState('generating_text');
-                const fbContent = await generateFacebookAdContent(format, imageDescription);
+                const fbContent = await generateFacebookAdContent(format, description);
                 setLoadingState('generating_image');
                 
                 // For Facebook, we generate a new image based on the prompt, but also featuring the product
-                const result = await generateAdMockup(selectedImage.file, fbContent.imagePrompt, '', imageDescription);
+                const result = await generateAdMockup(selectedImage.file, fbContent.imagePrompt, '', description);
                 if (!result.imageUrl) throw new Error("Facebook Ad image generation failed to return an image URL.");
 
                 const newContent: FacebookAdContent = {
@@ -151,7 +248,7 @@ export const App: React.FC = () => {
         } finally {
             setLoadingState('idle');
         }
-    }, [selectedImage, imageDescription, history, currentHistoryIndex]);
+    }, [selectedImage, imageDescription, history, currentHistoryIndex, selectedFormat, selectedSloganType]);
 
     const handleEdit = useCallback(async (editPrompt: string) => {
         const currentContent = history[currentHistoryIndex];
@@ -220,7 +317,8 @@ export const App: React.FC = () => {
 
     const handleNewVariation = useCallback(async () => {
         if (!lastGenerationParams) return;
-        await handleGenerate(lastGenerationParams.format, lastGenerationParams.sloganType);
+        // Regenerate with the same parameters
+        await handleGenerate();
     }, [lastGenerationParams, handleGenerate]);
 
     const handleFacebookAdTextChange = (newContent: Partial<FacebookAdContent>) => {
@@ -267,6 +365,37 @@ export const App: React.FC = () => {
         updateHistory(content);
     };
 
+    // Smart Analysis Handlers
+    const handleAnalysisConfirm = () => {
+        setSmartInput(prev => ({ ...prev, isAnalysisConfirmed: true }));
+        setShowAnalysisPopup(false);
+        // Sync with legacy description field for compatibility
+        setImageDescription(smartInput.description);
+    };
+
+    const handleAnalysisEdit = () => {
+        setShowAnalysisPopup(false);
+        // User will edit manually in the input fields
+    };
+
+    const handleAnalysisClose = () => {
+        setShowAnalysisPopup(false);
+        // Keep the suggestions but user can edit them
+    };
+
+    const handleNaturalEnvironment = () => {
+        // Simple toggle - don't generate immediately
+        setIsNaturalEnvironmentSelected(prev => !prev);
+        setSelectedFormat(null); // Clear regular format selection when toggling on
+        setError(null);
+    };
+
+    const handleSmartInputChange = (newInput: SmartProductInput) => {
+        setSmartInput(newInput);
+        // Sync description with legacy field for compatibility
+        setImageDescription(newInput.description);
+    };
+
     const handleToggleRepositionMode = () => setIsRepositionMode(prev => !prev);
     const handleRepositionClick = (x: number, y: number) => {
         const prompt = `Keeping everything else the same, move the main text or slogan to be centered around the click coordinates (${x.toFixed(2)}, ${y.toFixed(2)}), where (0,0) is the top-left corner and (1,1) is the bottom-right corner of the image. The product placement should not change.`;
@@ -276,58 +405,84 @@ export const App: React.FC = () => {
 
 
     return (
-        <div className="flex flex-col min-h-screen bg-gray-50 font-sans">
+        <div className="flex flex-col min-h-screen bg-gray-50">
             <Header />
-            <main className="flex-grow container mx-auto px-4 md:px-8 py-8 w-full max-w-screen-2xl">
-                {!selectedImage ? (
-                    <div className="max-w-xl mx-auto mt-16">
-                        <ImageUploader onImageUpload={handleImageUpload} />
-                    </div>
-                ) : (
-                    <div className="flex flex-col lg:flex-row gap-8 h-full">
-                        <Sidebar
-                            imageLibrary={uploadedImages}
-                            selectedImage={selectedImage}
-                            onSelectFromLibrary={handleSelectFromLibrary}
-                            onGenerate={handleGenerate}
-                            isLoading={isLoading}
-                            isImageGenerated={isContentGenerated}
-                            imageDescription={imageDescription}
-                            onDescriptionChange={setImageDescription}
-                            isDescriptionLoading={isDescriptionLoading}
-                            onImageUpload={handleImageUpload}
-                            onGenerateDescription={handleGenerateDescription}
+            <main className="flex-grow flex">
+                <Sidebar
+                    imageLibrary={uploadedImages}
+                    selectedImage={selectedImage}
+                    onSelectFromLibrary={handleSelectFromLibrary}
+                    onGenerate={handleGenerate}
+                    isLoading={isLoading || isAnalyzing}
+                    smartInput={smartInput}
+                    onSmartInputChange={handleSmartInputChange}
+                    isDescriptionLoading={isDescriptionLoading}
+                    onImageUpload={handleImageUpload}
+                    onGenerateDescription={handleGenerateDescription}
+                    selectedSloganType={selectedSloganType}
+                    onSelectSloganType={setSelectedSloganType}
+                />
+                <div className="flex-grow px-6 py-6">
+                    <div className="flex-1 min-w-0">
+                        {/* Generation Progress */}
+                        <GenerationProgress 
+                            loadingState={loadingState}
+                            isNaturalEnvironment={isNaturalEnvironmentSelected}
+                            selectedFormatName={selectedFormat?.name}
                         />
-                        <div className="flex-1 min-w-0">
-                            <Workspace
-                                loadingState={loadingState}
-                                generatedContent={generatedContent}
-                                error={error}
-                                onEdit={handleEdit}
-                                onUndo={handleUndo}
-                                onRedo={handleRedo}
-                                onReset={handleReset}
-                                onUploadNew={handleUploadNew}
-                                canUndo={canUndo}
-                                canRedo={canRedo}
-                                isContentGenerated={isContentGenerated}
-                                isLoading={isLoading}
-                                isRepositionMode={isRepositionMode}
-                                onToggleRepositionMode={handleToggleRepositionMode}
-                                onRepositionClick={handleRepositionClick}
-                                onRegenerateImage={handleRegenerateImage}
-                                onRegenerateText={handleRegenerateText}
-                                onNewVariation={handleNewVariation}
-                                sessionGallery={sessionGallery}
-                                onSelectFromGallery={handleSelectFromGallery}
-                                onFacebookAdTextChange={handleFacebookAdTextChange}
-                                lastGenerationParams={lastGenerationParams}
-                            />
-                        </div>
+                        
+                        <Workspace
+                            loadingState={loadingState}
+                            generatedContent={generatedContent}
+                            error={error}
+                            onEdit={handleEdit}
+                            onUndo={handleUndo}
+                            onRedo={handleRedo}
+                            onReset={handleReset}
+                            onUploadNew={handleUploadNew}
+                            canUndo={canUndo}
+                            canRedo={canRedo}
+                            isContentGenerated={isContentGenerated}
+                            isLoading={isLoading}
+                            isRepositionMode={isRepositionMode}
+                            onToggleRepositionMode={handleToggleRepositionMode}
+                            onRepositionClick={handleRepositionClick}
+                            onRegenerateImage={handleRegenerateImage}
+                            onRegenerateText={handleRegenerateText}
+                            onNewVariation={handleNewVariation}
+                            sessionGallery={sessionGallery}
+                            onSelectFromGallery={handleSelectFromGallery}
+                            onFacebookAdTextChange={handleFacebookAdTextChange}
+                            onImageUpload={handleImageUpload}
+                            lastGenerationParams={lastGenerationParams}
+                        />
                     </div>
-                )}
+                </div>
             </main>
-            <Footer />
+
+            {/* Analysis Loading Indicator */}
+            {isAnalyzing && <AnalysisLoader />}
+            
+            {/* Smart Analysis Popup */}
+            {smartInput.analysis && (
+                <SmartAnalysisPopup
+                    analysis={smartInput.analysis}
+                    isVisible={showAnalysisPopup}
+                    onConfirm={handleAnalysisConfirm}
+                    onEdit={handleAnalysisEdit}
+                    onClose={handleAnalysisClose}
+                    onUpdateAnalysis={(updates) => {
+                        setSmartInput(prev => ({
+                            ...prev,
+                            analysis: prev.analysis ? { ...prev.analysis, ...updates } : null
+                        }));
+                    }}
+                    onGenerate={() => {
+                        // Multi-format generation will be handled by GenerationProgressPopup
+                        console.log('Multi-format generation selected:', selectedFormatsForGeneration);
+                    }}
+                />
+            )}
         </div>
     );
 };

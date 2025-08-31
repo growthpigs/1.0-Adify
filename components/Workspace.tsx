@@ -1,5 +1,5 @@
 import React from 'react';
-import { ImageIcon, WarningIcon } from './Icons';
+import { ImageIcon, WarningIcon, UploadIcon } from './Icons';
 import { EditingTools } from './EditingTools';
 // FIX: Import LastGenerationParams to use in props.
 import { LoadingState, LastGenerationParams } from '../App';
@@ -28,6 +28,7 @@ interface WorkspaceProps {
   sessionGallery: GeneratedContent[];
   onSelectFromGallery: (content: GeneratedContent) => void;
   onFacebookAdTextChange: (newContent: Partial<FacebookAdContent>) => void;
+  onImageUpload: (file: File, previewUrl: string) => void;
   // FIX: Add missing lastGenerationParams prop.
   lastGenerationParams: LastGenerationParams | null;
 }
@@ -43,40 +44,88 @@ const LoadingIndicator: React.FC<{ state: LoadingState }> = ({ state }) => {
     return (
       <div className="flex flex-col items-center justify-center w-full h-full text-center">
         <div className="relative w-16 h-16">
-          <div className="absolute inset-0 border-4 border-indigo-200 rounded-full"></div>
-          <div className="absolute inset-0 border-4 border-t-indigo-600 border-l-indigo-600 border-b-indigo-600/10 border-r-indigo-600/10 rounded-full animate-spin"></div>
+          <div className="loading-spinner"></div>
+          <div className="loading-spinner-active"></div>
         </div>
-        <p className="mt-4 text-lg font-semibold text-indigo-700">{messages[state]}</p>
-        <p className="mt-1 text-sm text-gray-500">This can take a moment.</p>
+        <p className="content-title mt-4">{messages[state]}</p>
+        <p className="content-subtitle mt-1">This can take a moment.</p>
       </div>
     );
 };
 
-const InitialState: React.FC = () => (
-    <div className="flex flex-col items-center justify-center text-center text-gray-400 h-full">
-        <ImageIcon className="w-20 h-20 mb-4" />
-        <h3 className="text-xl font-bold text-gray-600">Your Ad Awaits</h3>
-        <p className="text-gray-500 mt-2">Select a format from the sidebar to begin.</p>
+const InitialState: React.FC<{ onImageUpload: (file: File, previewUrl: string) => void }> = ({ onImageUpload }) => {
+  const handleFile = (file: File | undefined) => {
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (typeof reader.result === 'string') {
+          onImageUpload(file, reader.result);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    handleFile(event.target.files?.[0]);
+  };
+
+  const onDragOver = (event: React.DragEvent<HTMLLabelElement>) => {
+    event.preventDefault();
+  };
+
+  const onDrop = (event: React.DragEvent<HTMLLabelElement>) => {
+    event.preventDefault();
+    handleFile(event.dataTransfer.files?.[0]);
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center text-center h-full max-w-md mx-auto">
+        <h3 className="section-header text-3xl mb-2">Start Your Creation</h3>
+        <p className="content-subtitle mb-8">Upload your product image to enter the creative studio.</p>
+        
+        <input
+          type="file"
+          id="workspace-file-upload"
+          onChange={handleFileChange}
+          className="hidden"
+          accept="image/png, image/jpeg, image/webp"
+        />
+        <label 
+          htmlFor="workspace-file-upload"
+          onDragOver={onDragOver}
+          onDrop={onDrop}
+          className="flex flex-col items-center justify-center w-full min-h-[200px] border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-pink-500 hover:bg-gray-50 transition-colors"
+        >
+          <div className="flex flex-col items-center justify-center pt-5 pb-6">
+              <UploadIcon className="w-12 h-12 mb-4 text-gray-400" />
+              <p className="mb-2 text-base content-subtitle">
+                <span className="font-semibold text-pink-500">Click to upload</span> or drag and drop
+              </p>
+              <p className="text-xs footer-text">PNG, JPG, or WEBP (Max 4MB)</p>
+          </div>
+        </label>
     </div>
-);
+  );
+};
 
 const ErrorState: React.FC<{ error: string }> = ({ error }) => {
     const isSafetyError = error.includes('PROHIBITED_CONTENT') || error.includes('SAFETY');
     return (
-      <div className="flex flex-col items-center justify-center text-center p-4">
-          <WarningIcon className="w-16 h-16 text-red-500 mb-4" />
-          <h3 className="text-xl font-bold text-red-600">Generation Failed</h3>
-          <p className="text-gray-600 mt-2 max-w-md bg-red-50 p-3 rounded-lg border border-red-200">{error}</p>
+      <div className="flex flex-col items-center justify-center text-center p-6">
+          <WarningIcon className="w-16 h-16 text-red-600 mb-6" />
+          <h3 className="section-header text-xl mb-4 text-red-600">Generation Failed</h3>
+          <div className="status-error max-w-md">{error}</div>
           {isSafetyError && (
-              <div className="mt-4 text-left text-sm text-gray-500 max-w-md p-4 bg-gray-50 rounded-lg border">
-                  <h4 className="font-semibold text-gray-700 mb-2">This may have been caused by a safety filter.</h4>
-                  <p className="mb-2">To get the best results, please try the following:</p>
-                  <ul className="list-disc list-inside space-y-1">
+              <div className="status-warning max-w-md mt-4 text-left">
+                  <h4 className="content-title mb-2">Safety Filter Detected</h4>
+                  <p className="content-subtitle mb-3">To get the best results, please try:</p>
+                  <ul className="list-disc list-inside space-y-1 content-subtitle">
                       <li>Try using a different product image.</li>
                       <li>Select a different ad format or slogan style.</li>
                       <li>If using the "Adjust" tool, try a more neutral description.</li>
                   </ul>
-                   <p className="mt-3">The model avoids generating certain types of content. Your request may have been too close to a restricted category.</p>
+                   <p className="content-subtitle mt-3">The model avoids generating certain types of content.</p>
               </div>
           )}
       </div>
@@ -85,7 +134,7 @@ const ErrorState: React.FC<{ error: string }> = ({ error }) => {
 
 
 export const Workspace: React.FC<WorkspaceProps> = (props) => {
-  const { loadingState, generatedContent, error, isContentGenerated, isRepositionMode, onRepositionClick, sessionGallery, onSelectFromGallery } = props;
+  const { loadingState, generatedContent, error, isContentGenerated, isRepositionMode, onRepositionClick, sessionGallery, onSelectFromGallery, onImageUpload } = props;
 
   const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
     if (!isRepositionMode || !generatedContent || 'headline' in generatedContent) return;
@@ -112,7 +161,7 @@ export const Workspace: React.FC<WorkspaceProps> = (props) => {
             );
         }
     }
-    return <InitialState />;
+    return <InitialState onImageUpload={onImageUpload} />;
   };
 
   const renderGalleryItem = (content: GeneratedContent, index: number) => {
@@ -120,7 +169,7 @@ export const Workspace: React.FC<WorkspaceProps> = (props) => {
         <button 
             key={index} 
             onClick={() => onSelectFromGallery(content)} 
-            className="aspect-square bg-gray-100 rounded-md overflow-hidden border-2 border-transparent hover:border-indigo-500 focus:border-indigo-500 focus:outline-none transition-colors"
+            className="aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-transparent hover:border-pink-500 focus:border-pink-500 focus:outline-none transition-all hover:scale-105"
             aria-label={`Select variation ${index + 1}`}
         >
             <img src={content.imageUrl} alt={`Variation ${index + 1}`} className="w-full h-full object-cover" />
@@ -129,8 +178,8 @@ export const Workspace: React.FC<WorkspaceProps> = (props) => {
   }
 
   return (
-    <div className="flex flex-col w-full h-full gap-6">
-        <div className="flex-grow bg-white rounded-xl shadow-lg w-full min-h-[50vh] max-h-[60vh] flex items-center justify-center p-4 border border-gray-200">
+    <div className="flex flex-col w-full h-full gap-4">
+        <div className="flex-grow bg-white border border-gray-200 rounded-lg w-full min-h-[50vh] max-h-[60vh] flex items-center justify-center p-6">
             {renderContent()}
         </div>
         
@@ -139,9 +188,9 @@ export const Workspace: React.FC<WorkspaceProps> = (props) => {
         )}
 
         {sessionGallery.length > 0 && (
-            <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-200">
-                <h3 className="text-sm font-semibold text-gray-800 mb-3">Session Variations</h3>
-                <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2">
+            <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <h3 className="section-header mb-4">Session Variations</h3>
+                <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-4">
                     {sessionGallery.map(renderGalleryItem)}
                 </div>
             </div>

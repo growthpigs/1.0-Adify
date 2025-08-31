@@ -33,3 +33,67 @@ export interface UploadedImage {
     file: File;
     previewUrl: string;
 }
+
+// Smart Analysis Types
+export type Industry = 
+    | 'saas' 
+    | 'ecommerce' 
+    | 'fashion' 
+    | 'food_beverage' 
+    | 'fitness_wellness' 
+    | 'technology' 
+    | 'b2b_services' 
+    | 'automotive' 
+    | 'real_estate' 
+    | 'education' 
+    | 'healthcare' 
+    | 'finance' 
+    | 'entertainment' 
+    | 'travel' 
+    | 'home_garden';
+
+export type TargetAudience = 
+    | 'entrepreneurs' 
+    | 'gen_z' 
+    | 'millennials' 
+    | 'busy_professionals' 
+    | 'parents' 
+    | 'students' 
+    | 'corporate_buyers' 
+    | 'fitness_enthusiasts' 
+    | 'tech_savvy' 
+    | 'luxury_consumers' 
+    | 'budget_conscious' 
+    | 'early_adopters';
+
+export type ProductType = 
+    | 'physical_product' 
+    | 'software_app' 
+    | 'logo_brand' 
+    | 'service_business' 
+    | 'digital_product' 
+    | 'food_beverage' 
+    | 'fashion_item' 
+    | 'tech_gadget' 
+    | 'home_goods' 
+    | 'beauty_product';
+
+export interface SmartProductAnalysis {
+    productType: ProductType;
+    suggestedTitle: string;
+    detectedIndustry: Industry;
+    recommendedAudiences: TargetAudience[];
+    userStory: string;
+    confidence: number; // 0-100
+    naturalEnvironments: string[];
+    avoidFormats: string[];
+}
+
+export interface SmartProductInput {
+    title: string;
+    description: string;
+    industry: Industry | null;
+    targetAudiences: TargetAudience[];
+    isAnalysisConfirmed: boolean;
+    analysis: SmartProductAnalysis | null;
+}

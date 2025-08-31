@@ -6,19 +6,7 @@
   <title>Adify - AI Ad Generator</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        fontFamily: {
-          sans: ['Inter', 'sans-serif'],
-        },
-      },
-    }
-  }
-</script>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@400;500;600&family=Barlow+Semi+Condensed:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script type="importmap">
 {
   "imports": {
@@ -29,13 +17,15 @@
   }
 }
 </script>
+<link rel="stylesheet" href="/src/index.css">
 <style>
   body {
-    background-color: #f3f4f6; /* gray-100 for light mode */
+    background-color: #f9fafb; /* gray-50 for light mode */
+    font-family: 'Barlow', system-ui, sans-serif;
   }
 </style>
 </head>
-<body class="bg-gray-100 text-gray-900">
+<body class="bg-gray-50 text-gray-900">
   <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>

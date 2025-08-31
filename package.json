@@ -4,23 +4,27 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 3000",
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "lint": "echo 'No linter configured yet'",
-    "test": "echo 'Tests not configured yet'",
-    "test:coverage": "echo 'Coverage not configured yet'"
+    "test": "echo 'Run manual tests using TEST_CHECKLIST.md'",
+    "test:build": "npm run typecheck && npm run build",
+    "test:manual": "echo 'Opening test checklist...' && cat TEST_CHECKLIST.md"
   },
   "dependencies": {
-    "@google/genai": "^1.16.0",
+    "@google/generative-ai": "^0.24.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.12",
     "@types/node": "^22.14.0",
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.9",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.12",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }

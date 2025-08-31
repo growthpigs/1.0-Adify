@@ -62,40 +62,42 @@ export const EditingTools: React.FC<EditingToolsProps> = ({
   const regenerationButtonClasses = "flex-1 flex items-center justify-center gap-2 py-2 px-3 text-sm font-medium text-gray-700 bg-white rounded-md border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors";
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+    <div className="bg-white border border-gray-200 rounded-lg p-6">
+      <h3 className="section-header mb-4">Generation Controls</h3>
       {/* Regeneration Controls */}
-      <div className="flex items-center justify-between gap-2 mb-4">
-        <button onClick={onRegenerateImage} disabled={isLoading || isFacebookAd} className={regenerationButtonClasses}>
+      <div className="flex items-center justify-between gap-4 mb-6">
+        <button onClick={onRegenerateImage} disabled={isLoading || isFacebookAd} className="btn-secondary-action flex-1 flex items-center justify-center gap-2 whitespace-nowrap">
           <ImageIcon className="w-4 h-4" />
-          Regenerate Image
+          <span>Regen Image</span>
         </button>
         <button 
             onClick={onRegenerateText} 
             disabled={isLoading || isFacebookAd || !lastGenerationParams?.sloganType} 
-            className={regenerationButtonClasses}
+            className="btn-secondary-action flex-1 flex items-center justify-center gap-2 whitespace-nowrap"
         >
           <TextIcon className="w-4 h-4" />
-          Regenerate Text
+          <span>Regen Text</span>
         </button>
-        <button onClick={onNewVariation} disabled={isLoading || isFacebookAd} className={regenerationButtonClasses}>
+        <button onClick={onNewVariation} disabled={isLoading || isFacebookAd} className="btn-secondary-neutral flex-1 flex items-center justify-center gap-2 whitespace-nowrap">
           <SparklesIcon className="w-4 h-4" />
-          New Variation
+          <span>New Variation</span>
         </button>
       </div>
 
       {/* Top Bar with Tabs and History */}
-      <div className="flex justify-between items-center border-t border-gray-200 pt-4">
+      <div className="flex justify-between items-center border-t border-gray-200 pt-6">
         <div>
+          <h4 className="content-title mb-2">Editing Mode</h4>
           <div className="hidden sm:block">
-            <nav className="flex space-x-1" aria-label="Tabs">
+            <nav className="flex space-x-2" aria-label="Tabs">
               {TABS.map((tab, index) => (
                 <button
                   key={tab}
                   onClick={() => handleTabClick(index)}
                   disabled={isFacebookAd}
-                  className={`${
-                    activeTab === index && !isFacebookAd ? 'bg-indigo-100 text-indigo-700' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
-                  } rounded-md px-3 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent`}
+                  className={`format-tab ${
+                    activeTab === index && !isFacebookAd ? 'format-tab-active' : 'format-tab-inactive'
+                  } disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent`}
                 >
                   {tab}
                 </button>
@@ -104,26 +106,26 @@ export const EditingTools: React.FC<EditingToolsProps> = ({
           </div>
         </div>
         <div className="flex items-center space-x-2">
-            <button onClick={onUndo} disabled={!canUndo || isLoading} className="px-3 py-2 text-sm font-medium text-gray-600 bg-white rounded-md border border-gray-300 hover:bg-gray-100 disabled:opacity-50">Undo</button>
-            <button onClick={onRedo} disabled={!canRedo || isLoading} className="px-3 py-2 text-sm font-medium text-gray-600 bg-white rounded-md border border-gray-300 hover:bg-gray-100 disabled:opacity-50">Redo</button>
+            <button onClick={onUndo} disabled={!canUndo || isLoading} className="btn-secondary-neutral">Undo</button>
+            <button onClick={onRedo} disabled={!canRedo || isLoading} className="btn-secondary-neutral">Redo</button>
         </div>
       </div>
       
       <div className={`mt-4 ${isFacebookAd ? 'opacity-50' : ''}`}>
         {activeTab === 0 && (
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-800">Apply a Professional Adjustment</h3>
+            <h4 className="content-title">Apply Professional Adjustment</h4>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 {adjustments.map(adj => (
                     <button 
                         key={adj.name} 
                         onClick={() => onEdit(adj.prompt)}
                         disabled={isLoading || isFacebookAd}
-                        className={`py-2 px-3 text-sm font-medium text-gray-700 rounded-md border border-gray-200 hover:bg-gray-200 disabled:opacity-50 flex items-center justify-center gap-2
-                          ${adj.name === 'Enhance Quality' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100' : 'bg-gray-100'}
-                        `}
+                        className={`py-2 px-3 text-xs rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap ${
+                          adj.name === 'Enhance Quality' ? 'btn-secondary-action' : 'btn-secondary-neutral'
+                        }`}
                     >
-                      {adj.name === 'Enhance Quality' && <SparklesIcon className="w-4 h-4" />}
+                      {adj.name === 'Enhance Quality' && <SparklesIcon className="w-3 h-3" />}
                       {adj.name}
                     </button>
                 ))}
@@ -134,19 +136,19 @@ export const EditingTools: React.FC<EditingToolsProps> = ({
                 value={adjustmentInput}
                 onChange={(e) => setAdjustmentInput(e.target.value)}
                 placeholder="Or describe an adjustment (e.g., 'change background to a forest')"
-                className="flex-grow bg-white border border-gray-300 text-gray-900 rounded-md focus:ring-indigo-500 focus:border-indigo-500 block p-2 text-sm"
+                className="form-input flex-grow text-sm"
                 disabled={isLoading || isFacebookAd}
               />
-              <button type="submit" disabled={isLoading || isFacebookAd || !adjustmentInput.trim()} className="px-4 py-2 rounded-md bg-indigo-500 text-white text-sm font-semibold hover:bg-indigo-600 disabled:bg-indigo-300">Apply</button>
+              <button type="submit" disabled={isLoading || isFacebookAd || !adjustmentInput.trim()} className="btn-primary px-4 py-2">Apply</button>
             </form>
           </div>
         )}
 
         {activeTab === 1 && !isFacebookAd && (
-          <div className="flex flex-col items-center justify-center text-center text-gray-500 p-4 min-h-[120px]">
-              <MoveIcon className="w-8 h-8 mb-2 text-indigo-500" />
-              <h3 className="font-semibold text-gray-700">Reposition Mode Active</h3>
-              <p>Click a location on the image above to move the slogan.</p>
+          <div className="flex flex-col items-center justify-center text-center p-4 min-h-[120px]">
+              <MoveIcon className="w-8 h-8 mb-4 text-pink-500" />
+              <h4 className="content-title mb-2">Reposition Mode Active</h4>
+              <p className="content-subtitle">Click a location on the image above to move the slogan.</p>
           </div>
         )}
       </div>
@@ -154,9 +156,9 @@ export const EditingTools: React.FC<EditingToolsProps> = ({
 
       {/* Bottom Action Buttons */}
       <div className="border-t border-gray-200 mt-6 pt-4 flex items-center justify-between">
-         <div>
-            <button onClick={onReset} disabled={!canUndo || isLoading} className="px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-md disabled:opacity-50">Reset</button>
-            <button onClick={onUploadNew} disabled={isLoading} className="px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-md disabled:opacity-50">Upload New</button>
+         <div className="flex space-x-2">
+            <button onClick={onReset} disabled={!canUndo || isLoading} className="btn-secondary-alert">Reset</button>
+            <button onClick={onUploadNew} disabled={isLoading} className="btn-secondary-neutral">Upload New</button>
          </div>
       </div>
    </div>

@@ -1,14 +1,30 @@
 import React from 'react';
-import { CameraIcon } from './Icons';
+
+const AdifyLogo: React.FC<{ className?: string }> = ({ className = "h-8 w-auto" }) => (
+  <svg className={className} viewBox="0 0 298.9 117.6" xmlns="http://www.w3.org/2000/svg">
+    {/* A - with pink accent */}
+    <path fill="#6B7280" d="M62.8,37c-1.9-4.3-5.9-13.5-9-20.4l-5.6-12.7h-2.6c-.9,0-1.3.8-1.3.8l-11,23.2,25.8,60.2s2.4,6.1,12.8,6.1c12.4,0,11,0,14,0s2-1.4.9-3.6c-1.9-3.9-20.4-44.9-24.1-53.6Z"/>
+    <path fill="#EC4899" d="M35.5,60.4c-6.7.1-9.9-.7-14.3,2-5.3,3.3-14.4,25.2-16.1,28.6-.3.8-.8,1.1-.3,1.5,1.1.9,2.1,2.1,16.7,1.7s18.2-11.1,21.8-25.4v-.2c1.6-5.6-3.1-8-7.9-8.3Z"/>
+    {/* d */}
+    <path fill="#6B7280" d="M146.6,9.2h-14.6c-1.1,0-1.8.7-1.8,1.8v30.8c-3.9-4.6-9.5-7.3-17.1-7.3-16.2,0-27.4,13.3-27.4,30.6s11.2,30.6,27.4,30.6,14.3-3.3,18.2-8.9l.2,5.7c0,1.1.8,1.8,1.9,1.8h13.1c1.1,0,2-.7,2-1.8V11c0-1.1-.8-1.8-1.9-1.8ZM117,79.1c-7.7,0-13.6-5.5-13.6-14s5.8-14,13.6-14,13.4,5.6,13.4,13.9-5.5,14.2-13.4,14.2Z"/>
+    {/* i */}
+    <rect fill="#6B7280" x="161.8" y="35.9" width="18.3" height="58.3" rx="1.8" ry="1.8"/>
+    <path fill="#6B7280" d="M171,6.8c-5.7,0-10,4.4-10,9.9s4.3,10,10,10,9.9-4.4,9.9-10-4.2-9.9-9.9-9.9Z"/>
+    {/* f */}
+    <path fill="#6B7280" d="M228.2,9.3c-3.6-1.8-6.2-2-9.8-2-13,0-20.9,6.2-20.9,20.5v8.2h-6.9c-1.1,0-1.8.7-1.8,1.8v10.5c0,1.1.7,1.8,1.8,1.8h6.9v42.5c0,1.1.7,1.8,1.8,1.8h14.6c1.1,0,1.9-.7,1.9-1.8v-42.5h11.7c1.1,0,1.8-.7,1.8-1.8v-10.5c0-1.1-.7-1.8-1.8-1.8h-11.7v-5.8c0-3.9,1.3-6.8,6.9-6.8s3,.4,5,.7c.8.1,1.5,0,1.5-.8v-12c0-.7-.4-1.5-1.1-1.9Z"/>
+    {/* y */}
+    <path fill="#6B7280" d="M293.8,35.9h-14.7c-1,0-1.9.5-2.3,1.4l-12.8,35.7-12.8-35.7c-.4-1-1.3-1.4-2.3-1.4h-14.7c-1.3,0-2,.7-1.5,2l22.6,56.4-8.6,20.3c-.6,1.4.1,2.1,1.5,2.1h14.2c1,0,1.8-.5,2.1-1.4l30.9-77.4c.5-1.3-.2-2-1.5-2Z"/>
+  </svg>
+);
 
 export const Header: React.FC = () => (
-  <header className="bg-white/80 backdrop-blur-lg border-b border-gray-200 sticky top-0 z-20">
-    <div className="container mx-auto px-4 md:px-8 py-4 flex items-center justify-center">
-      <div className="flex items-center space-x-3">
-        <CameraIcon className="w-8 h-8 text-indigo-600" />
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
-          Adify
-        </h1>
+  <header className="bg-white sticky top-0 z-20 border-b border-gray-200" style={{ height: '56px' }}>
+    <div className="h-full px-4 md:px-6 flex items-center justify-between max-w-screen-2xl mx-auto">
+      <AdifyLogo className="h-7 w-auto" />
+      <div className="flex items-center gap-3">
+        <span className="status-indicator status-running">
+          AI Ad Generator
+        </span>
       </div>
     </div>
   </header>

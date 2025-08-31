@@ -477,9 +477,20 @@ export const App: React.FC = () => {
                             analysis: prev.analysis ? { ...prev.analysis, ...updates } : null
                         }));
                     }}
-                    onGenerate={() => {
-                        // Multi-format generation will be handled by GenerationProgressPopup
-                        console.log('Multi-format generation selected:', selectedFormatsForGeneration);
+                    onGenerate={async (selectedFormats) => {
+                        // Generate ads for selected formats
+                        console.log('Generating ads for formats:', selectedFormats);
+                        
+                        if (selectedFormats.length > 0 && selectedImage) {
+                            // Set the first format and generate
+                            setSelectedFormat(selectedFormats[0]);
+                            
+                            // Close the popup first
+                            setShowAnalysisPopup(false);
+                            
+                            // Start generation
+                            await handleGenerate();
+                        }
                     }}
                 />
             )}

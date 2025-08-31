@@ -194,8 +194,15 @@ export const App: React.FC = () => {
         }
         
         if (!format) {
-            setError("Please select an ad format first.");
-            return;
+            // Auto-select Natural Environment format if none selected
+            const naturalEnvironmentFormat = AD_FORMATS.find(f => f.name === 'Natural Environment');
+            if (naturalEnvironmentFormat) {
+                setSelectedFormat(naturalEnvironmentFormat);
+                format = naturalEnvironmentFormat;
+            } else {
+                setError("Please select an ad format first.");
+                return;
+            }
         }
         
         if (!selectedImage || !description) {
@@ -478,12 +485,23 @@ export const App: React.FC = () => {
                         }));
                     }}
                     onGenerate={async (selectedFormats) => {
-                        // Generate ads for selected formats
-                        console.log('Generating ads for formats:', selectedFormats);
+                        // If no formats selected, use Natural Environment automatically
+                        let formatsToUse = selectedFormats;
                         
-                        if (selectedFormats.length > 0 && selectedImage) {
+                        if (formatsToUse.length === 0) {
+                            // Auto-select Natural Environment for smart generation
+                            const naturalEnvFormat = AD_FORMATS.find(f => f.name === 'Natural Environment');
+                            if (naturalEnvFormat) {
+                                formatsToUse = [naturalEnvFormat];
+                                console.log('Auto-selected Natural Environment format');
+                            }
+                        }
+                        
+                        console.log('Generating ads for formats:', formatsToUse);
+                        
+                        if (formatsToUse.length > 0 && selectedImage) {
                             // Set the first format and generate
-                            setSelectedFormat(selectedFormats[0]);
+                            setSelectedFormat(formatsToUse[0]);
                             
                             // Close the popup first
                             setShowAnalysisPopup(false);

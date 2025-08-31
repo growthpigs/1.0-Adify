@@ -425,15 +425,15 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
                     <div className="text-xs text-blue-800 space-y-1">
                         <div className="flex items-center gap-2">
                             <span className="w-1 h-1 bg-blue-400 rounded-full"></span>
-                            <span>Confirm these suggestions (or edit them below)</span>
+                            <span>AI will automatically place your product in its natural environment</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <span className="w-1 h-1 bg-blue-400 rounded-full"></span>
-                            <span>Try "Natural Environment" for AI-powered smart placement</span>
+                            <span>Smart context-aware placement based on your product type</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <span className="w-1 h-1 bg-blue-400 rounded-full"></span>
-                            <span>Or choose any format below and hit "Generate Ad"</span>
+                            <span>Click "Generate Smart Ad" to create your professional mockup</span>
                         </div>
                     </div>
                 </div>
@@ -444,7 +444,7 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
                         <div className="flex gap-3">
                             <button
                                 onClick={() => {
-                                    // Save all edits and move to format selection
+                                    // Save all edits and generate with Natural Environment
                                     onUpdateAnalysis({
                                         suggestedTitle: editableTitle,
                                         detectedIndustry: editableIndustry,
@@ -452,11 +452,13 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
                                         userStory: editableUserStory,
                                         naturalEnvironments: selectedEnvironments.length > 0 ? selectedEnvironments : analysis.naturalEnvironments
                                     });
-                                    setActiveTab('mockups');
+                                    // Automatically generate with Natural Environment
+                                    onGenerate([]);  // Empty array will trigger auto-selection
+                                    onClose();
                                 }}
                                 className="btn-primary flex items-center justify-center gap-2 flex-1"
                             >
-                                <span>✓ Save Analysis & Choose Formats</span>
+                                <span>🎨 Generate Smart Ad</span>
                             </button>
                             <button
                                 onClick={onClose}

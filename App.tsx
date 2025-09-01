@@ -806,15 +806,15 @@ export const App: React.FC = () => {
             <Header />
             
             {/* Unified Banner - One continuous strip */}
-            <div className="bg-gray-50 border-b border-gray-200">
+            <div className="bg-gray-50 border-b border-gray-200" style={{ height: '140px' }}>
                 <div className="flex">
                     {/* Uploads Section (Left) */}
-                    <div className="w-[600px] xl:w-[600px] lg:w-[500px] md:w-[400px] sm:w-[350px] flex-shrink-0 p-4 pt-3 pb-2 border-r border-gray-200">
-                        <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Uploads</h3>
+                    <div className="w-[600px] xl:w-[600px] lg:w-[500px] md:w-[400px] sm:w-[350px] flex-shrink-0 px-4 pt-[8px] pb-[12px] border-r border-gray-200">
+                        <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-[6px] opacity-70">Uploads</h3>
                         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                             <label 
                                 htmlFor="unified-file-upload"
-                                className="w-20 h-20 flex-shrink-0 bg-white rounded-lg flex items-center justify-center cursor-pointer border-2 border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-100 transition-colors"
+                                className="w-25 h-25 flex-shrink-0 bg-white rounded-lg flex items-center justify-center cursor-pointer border-2 border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-100 transition-colors"
                                 aria-label="Upload new image"
                             >
                                 <PlusIcon className="w-6 h-6 text-gray-400" />
@@ -843,7 +843,7 @@ export const App: React.FC = () => {
                                 <div key={image.id} className="relative group flex-shrink-0">
                                     <button 
                                         onClick={() => handleSelectFromLibrary(image)}
-                                        className={`w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                                        className={`w-25 h-25 rounded-lg overflow-hidden border-2 transition-all ${
                                             selectedImage?.id === image.id 
                                                 ? 'border-yellow-500 ring-2 ring-yellow-200' 
                                                 : 'border-gray-200 hover:border-gray-300'
@@ -868,11 +868,11 @@ export const App: React.FC = () => {
                     </div>
                     
                     {/* Generations Section (Right) */}
-                    <div className="flex-grow p-4 pt-3 pb-2">
-                        <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Generations</h3>
+                    <div className="flex-grow px-4 pt-[8px] pb-[12px]">
+                        <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-[6px] opacity-70">Generations</h3>
                         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                             {sessionGallery.length === 0 && (
-                                <div className="w-20 h-20 flex-shrink-0 bg-white rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
+                                <div className="w-25 h-25 flex-shrink-0 bg-white rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
                                     {/* Empty placeholder - no icon */}
                                 </div>
                             )}
@@ -880,7 +880,7 @@ export const App: React.FC = () => {
                                 <button
                                     key={index}
                                     onClick={() => handleSelectFromGallery(content)}
-                                    className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-yellow-500 focus:border-yellow-500 transition-all"
+                                    className="w-25 h-25 flex-shrink-0 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-yellow-500 focus:border-yellow-500 transition-all"
                                     aria-label={`Select generation ${index + 1}`}
                                 >
                                     <img src={content.imageUrl} alt={`Generation ${index + 1}`} className="w-full h-full object-cover" />
@@ -966,9 +966,17 @@ export const App: React.FC = () => {
                 isVisible={showAnalysisPopup && !!smartInput.analysis}
                 onClose={() => setShowAnalysisPopup(false)}
                 onFeelingLucky={() => {
+                    console.log('🍌 GO BANANAS CLICKED!');
+                    console.log('🔍 smartInput.analysis:', smartInput.analysis);
+                    console.log('🌿 naturalEnvironments:', smartInput.analysis?.naturalEnvironments);
+                    console.log('📸 selectedImage:', selectedImage ? selectedImage.file.name : 'NULL');
+                    console.log('🎯 currentState:', currentState);
+                    
                     // Select the first Natural Environment option and generate
                     if (smartInput.analysis?.naturalEnvironments && smartInput.analysis.naturalEnvironments.length > 0) {
                         const firstEnvironment = smartInput.analysis.naturalEnvironments[0];
+                        console.log('🎨 Selected environment:', firstEnvironment);
+                        
                         setCurrentState({
                             ...currentState,
                             selectedFormat: firstEnvironment.text,
@@ -976,8 +984,12 @@ export const App: React.FC = () => {
                             selectedEnvironment: firstEnvironment.text,
                             isNaturalEnvironment: true
                         });
+                        
+                        console.log('🚀 Calling handleGenerate...');
                         // Trigger generation with the first environment
                         handleGenerate();
+                    } else {
+                        console.log('❌ No natural environments found!');
                     }
                 }}
             />

@@ -188,8 +188,8 @@ export const Workspace: React.FC<WorkspaceProps> = (props) => {
   return (
     <div className="flex flex-col w-full h-full">
         {/* Main Content Area */}
-        <div className="flex-grow flex items-center justify-center p-6" style={{ paddingTop: '200px' }}>
-            <div className="w-full h-full max-w-2xl flex items-center justify-center">
+        <div className="flex-grow flex items-start justify-start p-6" style={{ paddingTop: '170px', paddingLeft: '25px' }}>
+            <div className="w-full h-full max-w-2xl">
                 {renderContent()}
             </div>
         </div>

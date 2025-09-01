@@ -135,18 +135,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
 
       {/* Full Analysis Section with Tabs - Always visible */}
-      <div className={`border-b border-gray-200 transition-opacity duration-200 ${!selectedImage ? 'opacity-50 pointer-events-none' : 'opacity-100'}`} style={{ marginTop: '7px' }}>
+      <div className={`border-b border-gray-200 transition-opacity duration-200 ${!selectedImage ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
         {/* Header - Always visible - Made thinner */}
-        <div className={`px-3 py-2 ${selectedImage?.analysis ? 'bg-blue-50 border-b border-blue-200' : 'bg-gray-50 border-b border-gray-200'}`}>
+        <div className={`px-2 py-1.5 border-b border-gray-200`} style={{ backgroundColor: '#fefcf0' }}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <SparklesIcon className="w-3 h-3 text-yellow-500" />
-              <h3 className="text-sm font-medium text-yellow-600">
+              <h3 className="text-base font-medium text-yellow-600">
                 {!selectedImage ? 'AI Analysis Ready' : selectedImage.analysis ? 'AI Analysis Complete' : 'Analyzing...'}
               </h3>
             </div>
             {/* AI Confidence Badge - Enhanced with cream container */}
-            <div className="bg-yellow-100 px-2 py-1 rounded-md">
+            <div className="bg-white px-2 py-1 rounded-md">
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-medium text-gray-700">Confidence:</span>
                 <div className="flex items-center gap-1">

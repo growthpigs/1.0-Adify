@@ -52,7 +52,8 @@ const AUDIENCE_LABELS: Record<TargetAudience, string> = {
     early_adopters: 'Early Adopters',
     creative_professionals: 'Creative Pros',
     artists_designers: 'Artists & Designers',
-    content_creators: 'Content Creators'
+    content_creators: 'Content Creators',
+    homeowners: 'Homeowners'
 };
 
 export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
@@ -241,7 +242,7 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
                 <div className="p-3 border-b border-gray-200 bg-gray-50">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <SparklesIcon className="w-4 h-4 text-pink-500" />
+                            <SparklesIcon className="w-4 h-4 text-yellow-500" />
                             <h3 className="text-sm font-semibold text-gray-900">AI Analysis Complete</h3>
                         </div>
                         {/* AI Confidence Badge - Top Right */}
@@ -276,7 +277,7 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
                                 onClick={() => setActiveTab(tab.id as TabType)}
                                 className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                                     activeTab === tab.id 
-                                        ? 'border-pink-500 text-pink-600 bg-pink-50' 
+                                        ? 'border-yellow-500 text-yellow-700 bg-yellow-50' 
                                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                                 }`}
                             >
@@ -335,7 +336,7 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
                                                 onClick={() => toggleAudience(audience)}
                                                 className={`py-1 px-1.5 rounded text-[11px] text-center transition-all duration-200 ${
                                                     isSelected
-                                                        ? 'bg-pink-100 border border-pink-300 text-pink-900'
+                                                        ? 'bg-yellow-100 border border-yellow-300 text-yellow-900'
                                                         : 'bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-700'
                                                 }`}
                                             >
@@ -429,7 +430,7 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
                                             disabled={isLoading || !onSelectSloganType}
                                             className={`py-1 px-2 text-xs rounded-md transition-all font-medium ${
                                                 selectedSloganType === type.id
-                                                    ? 'bg-pink-500 text-white'
+                                                    ? 'bg-yellow-500 text-gray-900'
                                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                             } ${isLoading || !onSelectSloganType ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         >

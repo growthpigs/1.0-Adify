@@ -1,16 +1,18 @@
 /* Tailwind CSS v4 imports */
 @import 'tailwindcss';
 
-/* FAANG-Style Design System for Adify */
-/* Clean, minimal, professional like Google/Apple/Stripe */
+/* FAANG-Style Design System for AutoBanana */
+/* Clean, minimal, professional like Google/Apple/Stripe with banana accents */
 /* Fonts loaded via HTML head for better performance */
 
-/* Design Tokens */
+/* Design Tokens - Banana Theme */
 :root {
-  --accent-pink: #EC4899;
-  --accent-pink-hover: #DB2777;
-  --accent-pink-light: rgb(252 231 243);
-  --accent-pink-lighter: rgba(236, 72, 153, 0.1);
+  --accent-yellow: #F59E0B;
+  --accent-yellow-hover: #D97706;
+  --accent-yellow-light: rgb(254 243 199);
+  --accent-yellow-lighter: rgba(245, 158, 11, 0.1);
+  --accent-banana: #FBBF24;
+  --accent-banana-hover: #F59E0B;
   
   --text-primary: rgb(17 24 39);
   --text-secondary: rgb(107 114 128);
@@ -72,17 +74,17 @@ body {
 }
 
 .status-running {
-  background: var(--accent-pink-light);
-  color: var(--accent-pink);
+  background: var(--accent-yellow-light);
+  color: var(--accent-yellow);
 }
 
-/* FAANG-Style Buttons */
+/* FAANG-Style Buttons - Banana Theme */
 .btn-primary {
   padding: 0.5rem 1.25rem;
-  background: var(--accent-pink);
-  color: white;
+  background: var(--accent-banana);
+  color: #1F2937;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   border-radius: 0.375rem;
   border: none;
   cursor: pointer;
@@ -92,11 +94,13 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--accent-pink-hover);
+  background: var(--accent-banana-hover);
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 
 .btn-primary:disabled {
@@ -106,7 +110,7 @@ body {
 
 .btn-primary:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px white, 0 0 0 4px var(--accent-pink);
+  box-shadow: 0 0 0 2px white, 0 0 0 4px var(--accent-banana);
 }
 
 .btn-secondary {
@@ -136,14 +140,14 @@ body {
   cursor: not-allowed;
 }
 
-/* Secondary Button Variants */
+/* Secondary Button Variants - Banana Theme */
 .btn-secondary-action {
   padding: 0.375rem 0.75rem;
   background: white;
-  color: var(--accent-pink);
+  color: var(--accent-yellow);
   font-size: 0.8125rem;
   font-weight: 500;
-  border: 1px solid rgb(251 207 232);
+  border: 1px solid rgb(254 243 199);
   border-radius: 0.375rem;
   cursor: pointer;
   transition: all 0.15s;
@@ -457,6 +461,38 @@ textarea,
 @keyframes shine {
   0% { transform: translateX(-100%); }
   100% { transform: translateX(400%); }
+}
+
+@keyframes peel {
+  0%, 100% { 
+    transform: rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  50% { 
+    transform: rotate(-15deg) scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+@keyframes bananaBounce {
+  0%, 100% { 
+    transform: translateY(0) rotate(0deg);
+  }
+  25% { 
+    transform: translateY(-10px) rotate(-5deg);
+  }
+  75% { 
+    transform: translateY(-10px) rotate(5deg);
+  }
+}
+
+@keyframes wiggle {
+  0%, 100% { 
+    transform: rotate(-5deg);
+  }
+  50% { 
+    transform: rotate(5deg);
+  }
 }
 
 /* Utility Classes */

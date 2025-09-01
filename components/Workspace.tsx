@@ -1,5 +1,5 @@
 import React from 'react';
-import { ImageIcon, WarningIcon, UploadIcon } from './Icons';
+import { ImageIcon, WarningIcon, UploadIcon, PlusIcon } from './Icons';
 import { EditingTools } from './EditingTools';
 // FIX: Import LastGenerationParams to use in props.
 import { LoadingState, LastGenerationParams } from '../App';
@@ -35,20 +35,57 @@ interface WorkspaceProps {
 
 const LoadingIndicator: React.FC<{ state: LoadingState }> = ({ state }) => {
     const messages = {
-        'generating_text': 'Writing compelling ad copy...',
-        'generating_image': 'Making your ad...',
-        'editing': 'Applying your edits...',
-        'describing': 'Analyzing your product...',
-        'idle': 'Getting ready...',
+        'generating_text': 'Peeling back the creative layers...',
+        'generating_image': 'Going bananas with your design...',
+        'editing': 'Adding the perfect split...',
+        'describing': 'Finding the ripest ideas...',
+        'idle': 'Warming up the banana stand...',
     };
     return (
       <div className="flex flex-col items-center justify-center w-full h-full text-center bg-white rounded-lg">
-        <div className="relative w-24 h-24 mb-6">
-          <div className="loading-spinner"></div>
-          <div className="loading-spinner-active"></div>
+        <div className="relative w-32 h-32 mb-6">
+          {/* Banana SVG with peeling animation */}
+          <svg className="w-full h-full animate-bounce" viewBox="0 0 100 100">
+            {/* Banana body */}
+            <path 
+              d="M30 50 Q20 30, 40 25 T70 30 Q80 40, 75 55 T60 70 Q45 75, 30 65 Z"
+              fill="#FFD700"
+              stroke="#FFA500"
+              strokeWidth="2"
+            />
+            {/* Peeling parts */}
+            <path 
+              d="M40 25 Q35 15, 45 20"
+              fill="#FFF8DC"
+              stroke="#FFA500"
+              strokeWidth="1.5"
+              className="animate-pulse origin-bottom"
+              style={{ animation: 'peel 2s ease-in-out infinite' }}
+            />
+            <path 
+              d="M55 28 Q50 18, 60 23"
+              fill="#FFF8DC"
+              stroke="#FFA500"
+              strokeWidth="1.5"
+              className="animate-pulse origin-bottom"
+              style={{ animation: 'peel 2s ease-in-out infinite 0.3s' }}
+            />
+            <path 
+              d="M65 32 Q60 22, 70 27"
+              fill="#FFF8DC"
+              stroke="#FFA500"
+              strokeWidth="1.5"
+              className="animate-pulse origin-bottom"
+              style={{ animation: 'peel 2s ease-in-out infinite 0.6s' }}
+            />
+            {/* Banana spots */}
+            <circle cx="45" cy="45" r="2" fill="#8B4513" opacity="0.3" />
+            <circle cx="55" cy="50" r="1.5" fill="#8B4513" opacity="0.3" />
+            <circle cx="50" cy="58" r="1.8" fill="#8B4513" opacity="0.3" />
+          </svg>
         </div>
-        <h3 className="text-2xl font-semibold text-gray-800 mb-2">{messages[state]}</h3>
-        <p className="text-lg text-gray-600">This can take a moment.</p>
+        <h3 className="text-2xl font-semibold text-yellow-600 mb-2">{messages[state]}</h3>
+        <p className="text-lg text-gray-600">Just a split second more...</p>
       </div>
     );
 };
@@ -95,10 +132,7 @@ const InitialState: React.FC<{ onImageUpload: (file: File, previewUrl: string) =
   };
 
   return (
-    <div className="flex flex-col items-center justify-center text-center h-full max-w-md mx-auto">
-        <h3 className="section-header text-3xl mb-2">Automatic Ad Generation</h3>
-        <p className="content-subtitle mb-8">Upload your product image and we'll instantly create professional mockups using AI analysis.</p>
-        
+    <div className="flex flex-col items-center justify-center text-center h-full">
         <input
           type="file"
           id="workspace-file-upload"
@@ -110,14 +144,14 @@ const InitialState: React.FC<{ onImageUpload: (file: File, previewUrl: string) =
           htmlFor="workspace-file-upload"
           onDragOver={onDragOver}
           onDrop={onDrop}
-          className="flex flex-col items-center justify-center w-full min-h-[200px] border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-pink-500 hover:bg-gray-50 transition-colors"
+          className="flex flex-col items-center justify-center aspect-square w-full max-w-[400px] border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-yellow-500 hover:bg-gray-50 transition-colors"
         >
-          <div className="flex flex-col items-center justify-center pt-5 pb-6">
-              <UploadIcon className="w-12 h-12 mb-4 text-gray-400" />
-              <p className="mb-2 text-base content-subtitle">
-                <span className="font-semibold text-pink-500">Click to upload</span> or drag and drop
+          <div className="flex flex-col items-center justify-center p-8">
+              <UploadIcon className="w-10 h-10 mb-4 text-gray-400" />
+              <p className="mb-2 text-xl content-subtitle">
+                <span className="font-semibold text-yellow-600">Click to upload</span> or drag and drop
               </p>
-              <p className="text-xs footer-text">PNG, JPG, or WEBP (Max 4MB)</p>
+              <p className="text-sm footer-text">PNG, JPG, or WEBP (Max 4MB)</p>
           </div>
         </label>
     </div>
@@ -183,32 +217,14 @@ export const Workspace: React.FC<WorkspaceProps> = (props) => {
     return <InitialState onImageUpload={onImageUpload} />;
   };
 
-  const renderGalleryItem = (content: GeneratedContent, index: number) => {
-      return (
-        <button 
-            key={index} 
-            onClick={() => onSelectFromGallery(content)} 
-            className="aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-transparent hover:border-pink-500 focus:border-pink-500 focus:outline-none transition-all hover:scale-105"
-            aria-label={`Select variation ${index + 1}`}
-        >
-            <img src={content.imageUrl} alt={`Variation ${index + 1}`} className="w-full h-full object-cover" />
-        </button>
-      )
-  }
 
   return (
-    <div className="flex flex-col w-full h-full gap-4">
-        {sessionGallery.length > 0 && (
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-                <h3 className="section-header mb-3">Session Variations</h3>
-                <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-2">
-                    {sessionGallery.map(renderGalleryItem)}
-                </div>
+    <div className="flex flex-col w-full h-full">
+        {/* Main Content Area */}
+        <div className="flex-grow flex items-center justify-center p-6" style={{ paddingTop: '200px' }}>
+            <div className="w-full h-full max-w-2xl flex items-center justify-center">
+                {renderContent()}
             </div>
-        )}
-        
-        <div className="flex-grow bg-white border border-gray-200 rounded-lg w-full min-h-[50vh] max-h-[60vh] flex items-center justify-center p-6">
-            {renderContent()}
         </div>
         
         {isContentGenerated && (

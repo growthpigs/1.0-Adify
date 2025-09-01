@@ -40,7 +40,11 @@ const AUDIENCE_OPTIONS: { value: TargetAudience; label: string; description: str
     { value: 'tech_savvy', label: 'Tech-Savvy Users', description: 'Early adopters, gadget lovers' },
     { value: 'luxury_consumers', label: 'Luxury Consumers', description: 'Premium quality seekers' },
     { value: 'budget_conscious', label: 'Budget-Conscious', description: 'Value and deals focused' },
-    { value: 'early_adopters', label: 'Early Adopters', description: 'Innovation enthusiasts' }
+    { value: 'early_adopters', label: 'Early Adopters', description: 'Innovation enthusiasts' },
+    { value: 'creative_professionals', label: 'Creative Professionals', description: 'Design and creative industry professionals' },
+    { value: 'artists_designers', label: 'Artists & Designers', description: 'Visual artists, graphic designers, creatives' },
+    { value: 'content_creators', label: 'Content Creators', description: 'Influencers, bloggers, social media creators' },
+    { value: 'homeowners', label: 'Homeowners', description: 'People who own homes and purchase household items' }
 ];
 
 const MAX_DESC_LENGTH = 800;
@@ -56,23 +60,9 @@ export const SmartProductInput: React.FC<SmartProductInputProps> = ({
         onInputChange({ ...input, ...updates });
     };
 
-    const toggleAudience = (audience: TargetAudience) => {
-        const currentAudiences = input.targetAudiences;
-        const isSelected = currentAudiences.includes(audience);
-        
-        if (isSelected) {
-            updateInput({
-                targetAudiences: currentAudiences.filter(a => a !== audience)
-            });
-        } else {
-            updateInput({
-                targetAudiences: [...currentAudiences, audience]
-            });
-        }
-    };
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-3">
             {/* Analysis Status */}
             {input.analysis && input.isAnalysisConfirmed && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-3">
@@ -129,57 +119,35 @@ export const SmartProductInput: React.FC<SmartProductInputProps> = ({
                 </select>
             </div>
 
-            {/* Target Audiences */}
+            {/* Target Audience */}
             <div>
                 <div className="flex justify-between items-center mb-2">
                     <label className="block text-sm font-medium text-gray-700">
-                        Target Audiences
+                        Target Audience
                     </label>
                     {input.analysis && !input.isAnalysisConfirmed && (
                         <span className="text-xs text-blue-600">AI Suggested</span>
                     )}
                 </div>
-                <p className="text-xs text-gray-500 mb-3">Select all that apply (multiple allowed)</p>
-                <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto">
-                    {AUDIENCE_OPTIONS.map(option => {
-                        const isSelected = input.targetAudiences.includes(option.value);
-                        return (
-                            <button
-                                key={option.value}
-                                onClick={() => toggleAudience(option.value)}
-                                disabled={isLoading}
-                                className={`p-3 text-left border rounded-lg transition-all ${
-                                    isSelected 
-                                        ? 'border-pink-500 bg-pink-50 text-pink-900' 
-                                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
-                                } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                            >
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm font-medium">{option.label}</span>
-                                    {isSelected && (
-                                        <div className="w-4 h-4 bg-pink-500 rounded-full flex items-center justify-center">
-                                            <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                            </svg>
-                                        </div>
-                                    )}
-                                </div>
-                                <p className="text-xs text-gray-500 mt-1">{option.description}</p>
-                            </button>
-                        );
-                    })}
-                </div>
-                {input.targetAudiences.length > 0 && (
-                    <p className="text-xs text-gray-600 mt-2">
-                        {input.targetAudiences.length} audience{input.targetAudiences.length > 1 ? 's' : ''} selected
-                    </p>
-                )}
+                <select
+                    value={input.targetAudience || ''}
+                    onChange={(e) => updateInput({ targetAudience: e.target.value as TargetAudience || null })}
+                    className="form-select w-full"
+                    disabled={isLoading}
+                >
+                    <option value="">Select Target Audience</option>
+                    {AUDIENCE_OPTIONS.map(option => (
+                        <option key={option.value} value={option.value}>
+                            {option.label}
+                        </option>
+                    ))}
+                </select>
             </div>
 
             {/* Product Description */}
             <div>
                 <div className="flex justify-between items-center mb-2">
-                    <label className="block text-sm font-medium text-gray-700">Product Description</label>
+                    <label className="block text-sm font-medium text-gray-700">Description</label>
                     <button
                         onClick={() => {
                             console.log('🔵 CRITICAL: Generate Description button clicked!');
@@ -209,9 +177,9 @@ export const SmartProductInput: React.FC<SmartProductInputProps> = ({
                         <textarea
                             value={input.description}
                             onChange={(e) => updateInput({ description: e.target.value })}
-                            rows={4}
+                            rows={2}
                             maxLength={MAX_DESC_LENGTH}
-                            className="form-textarea w-full"
+                            className="form-textarea w-full resize-y min-h-[2.5rem]"
                             placeholder="Describe your product's features, benefits, and unique value..."
                             disabled={isLoading}
                         />

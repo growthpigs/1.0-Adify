@@ -73,7 +73,8 @@ export type TargetAudience =
     | 'early_adopters'
     | 'creative_professionals'
     | 'artists_designers'
-    | 'content_creators';
+    | 'content_creators'
+    | 'homeowners';
 
 export type ProductType = 
     | 'physical_product' 
@@ -102,7 +103,7 @@ export interface SmartProductInput {
     title: string;
     description: string;
     industry: Industry | null;
-    targetAudiences: TargetAudience[];
+    targetAudience: TargetAudience | null;
     isAnalysisConfirmed: boolean;
     analysis: SmartProductAnalysis | null;
 }

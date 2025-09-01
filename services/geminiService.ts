@@ -352,8 +352,8 @@ IMPORTANT INDUSTRY DETECTION RULES:
 - If it shows physical products → match to product category
 - NEVER default to "technology" unless it's actual tech hardware or software UI
 
-1. What industry/category this belongs to (be specific about creative content)
-2. Who the target audiences should be (for art/creative: artists_designers, creative_professionals, content_creators)
+1. What industry/category this belongs to (be specific and accurate)
+2. Who the target audiences should be (analyze the specific product type and suggest the most relevant audiences - for kitchen items: homeowners, parents, budget_conscious; for tech: tech_savvy, early_adopters, millennials; for fitness: fitness_enthusiasts, busy_professionals; be product-specific)
 3. Natural environments where this product would realistically be placed or used (be specific about physical locations)
 4. A brief, factual description of the actual visual content
 5. Your confidence level (0-100)
@@ -368,7 +368,7 @@ Return a valid JSON object with this structure:
 {
   "suggestedTitle": "accurate title - for art use: 'Digital Art Creation' or similar",
   "detectedIndustry": "one of: saas, ecommerce, fashion, food_beverage, fitness_wellness, technology, b2b_services, automotive, real_estate, education, healthcare, finance, entertainment, travel, home_garden",
-  "recommendedAudiences": ["array of up to 4 - MUST include creative_professionals, artists_designers for any artistic content"],
+  "recommendedAudiences": ["array of exactly 2 most relevant and different audiences based on the actual product - choose from: entrepreneurs, gen_z, millennials, busy_professionals, parents, students, corporate_buyers, fitness_enthusiasts, tech_savvy, luxury_consumers, budget_conscious, early_adopters, creative_professionals, artists_designers, content_creators, homeowners"],
   "naturalEnvironments": ["array of exactly 9 SPECIFIC PHYSICAL LOCATIONS like 'modern office desk', 'coffee shop table', 'kitchen counter', 'rooftop terrace', 'cozy reading nook', 'outdoor garden table', 'bedroom nightstand', 'city park bench', 'home studio workspace'"],
   "userStory": "A factual description of the visual elements, style, and artistic technique visible in the image",
   "confidence": 85

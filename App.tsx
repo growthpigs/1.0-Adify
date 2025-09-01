@@ -11,6 +11,7 @@ import { Footer } from './components/Footer';
 import { Sidebar } from './components/Sidebar';
 import { Workspace } from './components/Workspace';
 import { AnalysisCompleteNotification } from './components/AnalysisCompleteNotification';
+import { PlusIcon } from './components/Icons';
 import { AnalysisLoader } from './components/AnalysisLoader';
 import { GenerationLoader } from './components/GenerationLoader';
 import { GenerationProgress } from './components/GenerationProgress';
@@ -51,7 +52,7 @@ export const App: React.FC = () => {
         title: '',
         description: '',
         industry: null,
-        targetAudiences: [],
+        targetAudience: null,
         isAnalysisConfirmed: false,
         analysis: null
     });
@@ -124,7 +125,7 @@ export const App: React.FC = () => {
         
         // Image uploaded successfully - provide feedback and start analysis
         console.log('✅ Image uploaded successfully, starting smart analysis...');
-        toast.success(`Image "${file.name}" uploaded successfully! Analyzing product...`);
+        toast.success(`🍌 Sweet! Your image is ready to go bananas!`);
         
         // Start smart analysis automatically and store with image
         try {
@@ -144,7 +145,7 @@ export const App: React.FC = () => {
                 title: analysisResult.suggestedTitle,
                 description: 'AI-powered product analysis',
                 industry: analysisResult.detectedIndustry,
-                targetAudiences: analysisResult.recommendedAudiences,
+                targetAudience: analysisResult.recommendedAudiences?.[0] || null,
                 analysis: analysisResult,
                 isAnalysisConfirmed: true
             };
@@ -166,12 +167,12 @@ export const App: React.FC = () => {
             console.log('🎯 Showing smart analysis popup...');
             setShowAnalysisPopup(true);
             
-            toast.success('Product analyzed! Please review and confirm.');
+            toast.success('🍌 Ripe and ready! Your product analysis is complete.');
             
         } catch (error) {
             console.error('❌ Smart analysis failed:', error);
             setIsAnalyzing(false);
-            toast.error('Analysis failed, but you can still generate manually');
+            toast.error('🍌 Oops! Analysis slipped up, but you can still create magic manually!');
             // Continue without analysis - user can still generate manually
         }
     }, [smartInput]);
@@ -266,7 +267,7 @@ export const App: React.FC = () => {
                 selectedFormat: selectedFormat?.name,
                 isNaturalEnvironmentSelected
             });
-            toast.error('Please upload an image first');
+            toast.error('🍌 Hold up! Feed me an image first!');
             setError("Please upload an image first.");
             return;
         }
@@ -278,7 +279,7 @@ export const App: React.FC = () => {
                 imageDescription: imageDescription,
                 combinedDescription: description
             });
-            toast.error('Please wait for image analysis to complete');
+            toast.error('🍌 Easy there! Let me finish analyzing first!');
             setError("Please wait for image analysis to complete.");
             return;
         }
@@ -494,12 +495,12 @@ export const App: React.FC = () => {
         console.log('🎯 Starting multi-format generation for', formats.length, 'formats');
         
         if (!selectedImage) {
-            toast.error('Please upload an image first');
+            toast.error('🍌 Hold up! Feed me an image first!');
             return;
         }
         
         if (formats.length === 0) {
-            toast.error('Please select at least one format');
+            toast.error('🍌 Pick a format to make things a-peel-ing!');
             return;
         }
         
@@ -520,7 +521,7 @@ export const App: React.FC = () => {
         }
         
         // Multiple formats - show progress and generate sequentially
-        toast.success(`Starting generation of ${formats.length} ad formats...`);
+        toast.success(`🍌 Going bananas! Creating ${formats.length} amazing designs...`);
         
         try {
             const results: GeneratedContent[] = [];
@@ -565,21 +566,21 @@ export const App: React.FC = () => {
                     }
                 } catch (error: any) {
                     console.error(`❌ Failed to generate ${format.name}:`, error);
-                    toast.error(`Failed to generate ${format.name}: ${error.message}`);
+                    toast.error(`🍌 Slipped up on ${format.name}: ${error.message}`);
                 }
             }
             
             // Show the last generated result
             if (results.length > 0) {
                 updateHistory(results[results.length - 1]);
-                toast.success(`✅ Generated ${results.length} of ${formats.length} ad formats!`);
+                toast.success(`🍌 Split-second success! Created ${results.length} of ${formats.length} designs!`);
             } else {
-                toast.error('Failed to generate any ad formats');
+                toast.error('🍌 Banana split! Couldn\'t create any designs.');
             }
             
         } catch (error: any) {
             console.error('❌ Multi-format generation failed:', error);
-            toast.error('Multi-format generation failed');
+            toast.error('🍌 The bunch got tangled! Generation failed.');
         } finally {
             setLoadingState('idle');
             setCurrentGenerationQueue(null);
@@ -629,7 +630,7 @@ export const App: React.FC = () => {
                     title: '',
                     description: '',
                     industry: null,
-                    targetAudiences: [],
+                    targetAudience: null,
                     isAnalysisConfirmed: false,
                     analysis: null
                 });
@@ -720,7 +721,7 @@ export const App: React.FC = () => {
                 title: '',
                 description: '',
                 industry: null,
-                targetAudiences: [],
+                targetAudience: null,
                 isAnalysisConfirmed: false,
                 analysis: null
             });
@@ -728,7 +729,62 @@ export const App: React.FC = () => {
             // Clear description
             setImageDescription('');
             
-            toast.success('Analysis cleared! You can now set your own preferences.');
+            toast.success('🍌 Fresh start! Ready for your creative input.');
+        }
+    };
+
+    const handleReanalyze = async () => {
+        if (!selectedImage || loadingState !== 'idle') return;
+        
+        console.log('🔄 REANALYZE: Starting reanalysis with current smartInput:', smartInput);
+        toast('🍌 Peeling back the layers with your updates...');
+        
+        try {
+            setLoadingState('describing');
+            setError(null);
+            
+            // Use current smartInput values to generate new analysis
+            const analysis = await analyzeProduct(
+                selectedImage.file, 
+                smartInput.title || '', 
+                smartInput.description || ''
+            );
+            
+            if (analysis) {
+                // Update the selected image with new analysis
+                const updatedImage = {
+                    ...selectedImage,
+                    analysis: analysis,
+                    smartInput: {
+                        ...smartInput,
+                        analysis: analysis,
+                        isAnalysisConfirmed: false // Allow user to review the new analysis
+                    }
+                };
+                
+                // Update image library
+                setUploadedImages(prev => 
+                    prev.map(img => img.id === selectedImage.id ? updatedImage : img)
+                );
+                
+                // Update selected image
+                setSelectedImage(updatedImage);
+                
+                // Update smart input with new analysis but keep user's edits
+                setSmartInput(prev => ({
+                    ...prev,
+                    analysis: analysis,
+                    isAnalysisConfirmed: false
+                }));
+                
+                toast.success('🍌 Perfectly ripe! Check out the fresh suggestions.');
+            }
+        } catch (error) {
+            console.error('Reanalysis failed:', error);
+            setError('Failed to reanalyze the image. Please try again.');
+            toast.error('🍌 Slipped on the peel! Try again.');
+        } finally {
+            setLoadingState('idle');
         }
     };
 
@@ -746,8 +802,95 @@ export const App: React.FC = () => {
     }
     
     return (
-        <div className="flex flex-col min-h-screen bg-gray-50">
+        <div className="flex flex-col min-h-screen" style={{ backgroundColor: '#fefcf0' }}>
             <Header />
+            
+            {/* Unified Banner - One continuous strip */}
+            <div className="bg-gray-50 border-b border-gray-200">
+                <div className="flex">
+                    {/* Uploads Section (Left) */}
+                    <div className="w-[600px] xl:w-[600px] lg:w-[500px] md:w-[400px] sm:w-[350px] flex-shrink-0 p-4 pt-3 pb-2 border-r border-gray-200">
+                        <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Uploads</h3>
+                        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                            <label 
+                                htmlFor="unified-file-upload"
+                                className="w-20 h-20 flex-shrink-0 bg-white rounded-lg flex items-center justify-center cursor-pointer border-2 border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-100 transition-colors"
+                                aria-label="Upload new image"
+                            >
+                                <PlusIcon className="w-6 h-6 text-gray-400" />
+                                <input
+                                    id="unified-file-upload"
+                                    type="file"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file && file.type.startsWith('image/')) {
+                                            const reader = new FileReader();
+                                            reader.onloadend = () => {
+                                                if (typeof reader.result === 'string') {
+                                                    handleImageUpload(file, reader.result);
+                                                }
+                                            };
+                                            reader.readAsDataURL(file);
+                                        }
+                                        e.target.value = '';
+                                    }}
+                                    className="hidden"
+                                    accept="image/png, image/jpeg, image/webp"
+                                    disabled={loadingState !== 'idle'}
+                                />
+                            </label>
+                            {uploadedImages.map(image => (
+                                <div key={image.id} className="relative group flex-shrink-0">
+                                    <button 
+                                        onClick={() => handleSelectFromLibrary(image)}
+                                        className={`w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                                            selectedImage?.id === image.id 
+                                                ? 'border-yellow-500 ring-2 ring-yellow-200' 
+                                                : 'border-gray-200 hover:border-gray-300'
+                                        }`}
+                                        aria-label="Select product image"
+                                    >
+                                        <img src={image.previewUrl} alt="Product" className="w-full h-full object-cover" />
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDeleteFromLibrary(image.id);
+                                        }}
+                                        className="absolute top-1 right-1 bg-gray-600 bg-opacity-80 text-white rounded w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-700"
+                                        aria-label="Delete image"
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    
+                    {/* Generations Section (Right) */}
+                    <div className="flex-grow p-4 pt-3 pb-2">
+                        <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Generations</h3>
+                        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                            {sessionGallery.length === 0 && (
+                                <div className="w-20 h-20 flex-shrink-0 bg-white rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
+                                    {/* Empty placeholder - no icon */}
+                                </div>
+                            )}
+                            {sessionGallery.map((content, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => handleSelectFromGallery(content)}
+                                    className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-yellow-500 focus:border-yellow-500 transition-all"
+                                    aria-label={`Select generation ${index + 1}`}
+                                >
+                                    <img src={content.imageUrl} alt={`Generation ${index + 1}`} className="w-full h-full object-cover" />
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <main className="flex-grow flex">
                 <Sidebar
                     imageLibrary={uploadedImages}
@@ -765,6 +908,7 @@ export const App: React.FC = () => {
                     selectedSloganType={selectedSloganType}
                     onSelectSloganType={setSelectedSloganType}
                     onResetAnalysis={handleResetAnalysis}
+                    onReanalyze={handleReanalyze}
                 />
                 <div className="flex-grow px-6 py-6">
                     <div className="flex-1 min-w-0">
@@ -803,6 +947,8 @@ export const App: React.FC = () => {
                     </div>
                 </div>
             </main>
+            
+            <Footer />
 
             {/* Loading Indicators */}
             {isAnalyzing && <AnalysisLoader />}
@@ -825,8 +971,24 @@ export const App: React.FC = () => {
                 toastOptions={{
                     duration: 4000,
                     style: {
-                        background: '#363636',
-                        color: '#fff',
+                        background: '#FEF3C7',
+                        color: '#713f12',
+                        border: '1px solid #FDE68A',
+                        padding: '16px',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                    },
+                    success: {
+                        iconTheme: {
+                            primary: '#FBBF24',
+                            secondary: '#FEF3C7',
+                        },
+                    },
+                    error: {
+                        iconTheme: {
+                            primary: '#F59E0B',
+                            secondary: '#FEF3C7',
+                        },
                     },
                 }}
             />

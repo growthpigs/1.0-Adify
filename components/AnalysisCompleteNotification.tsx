@@ -45,7 +45,7 @@ export const AnalysisCompleteNotification: React.FC<AnalysisCompleteNotification
                 
                 <button
                     onClick={onClose}
-                    className="w-full mt-4 bg-pink-500 text-white py-2 px-4 rounded-lg hover:bg-pink-600 transition-colors font-medium"
+                    className="w-full mt-4 bg-yellow-500 text-gray-900 py-2 px-4 rounded-lg hover:bg-yellow-600 transition-colors font-medium"
                 >
                     Got it!
                 </button>

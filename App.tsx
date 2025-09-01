@@ -119,7 +119,8 @@ export const App: React.FC = () => {
         setHistory([]);
         setCurrentHistoryIndex(-1);
         setError(null);
-        setSessionGallery([]);
+        // DON'T clear session gallery - keep all generations!
+        // setSessionGallery([]);
         setLastGenerationParams(null);
         console.log('✅ Image state set successfully');
         
@@ -132,30 +133,23 @@ export const App: React.FC = () => {
             console.log('🧠 Starting automatic smart analysis...');
             setIsAnalyzing(true);
             
-            // First, generate a real description of the product
-            console.log('📝 Generating product description...');
-            let productDescription = '';
-            try {
-                productDescription = await describeImage(newImage.file);
-                console.log('✅ Description generated:', productDescription);
-                setImageDescription(productDescription); // Update the state with real description
-            } catch (descError) {
-                console.error('Description generation failed, using fallback:', descError);
-                productDescription = 'Professional product for your marketing needs';
-            }
-            
-            // Trigger smart analysis with the real description
+            // Single API call for analysis (includes description generation)
             const analysisResult = await analyzeProduct(
                 newImage.file, 
                 'Product', // Default title
-                productDescription // Use the actual generated description
+                '' // Empty description - analyzeProduct will generate its own
             );
             console.log('📊 Analysis result:', analysisResult);
+            
+            // Use the description from the analysis result
+            const productDescription = analysisResult.userStory || 'Professional product for your marketing needs';
+            console.log('✅ Description from analysis:', productDescription);
+            setImageDescription(productDescription); // Update the state with description
             
             // Update the image with analysis results and smart input
             const analysisSmartInput: SmartProductInput = {
                 title: analysisResult.suggestedTitle,
-                description: productDescription, // Use the real description here too
+                description: productDescription, // Use the description from analysis
                 industry: analysisResult.detectedIndustry,
                 targetAudience: analysisResult.recommendedAudiences?.[0] || null,
                 analysis: analysisResult,
@@ -627,7 +621,8 @@ export const App: React.FC = () => {
         setHistory([]);
         setCurrentHistoryIndex(-1);
         setError(null);
-        setSessionGallery([]);
+        // Keep session gallery - don't clear generations
+        // setSessionGallery([]);
         setLastGenerationParams(null);
     };
 
@@ -655,7 +650,8 @@ export const App: React.FC = () => {
             setHistory([]);
             setCurrentHistoryIndex(-1);
             setError(null);
-            setSessionGallery([]);
+            // Keep session gallery when switching images
+            // setSessionGallery([]);
             setLastGenerationParams(null);
         }
     };
@@ -672,7 +668,8 @@ export const App: React.FC = () => {
                 setImageDescription('');
                 setHistory([]);
                 setCurrentHistoryIndex(-1);
-                setSessionGallery([]);
+                // Only clear gallery if no images left
+                // setSessionGallery([]);
                 setLastGenerationParams(null);
             }
         }

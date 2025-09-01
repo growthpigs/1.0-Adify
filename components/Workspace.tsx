@@ -36,38 +36,50 @@ interface WorkspaceProps {
 const LoadingIndicator: React.FC<{ state: LoadingState }> = ({ state }) => {
     const messages = {
         'generating_text': 'Writing compelling ad copy...',
-        'generating_image': 'Creating your ad creative...',
+        'generating_image': 'Making your ad...',
         'editing': 'Applying your edits...',
         'describing': 'Analyzing your product...',
-        'idle': 'Starting up...',
+        'idle': 'Getting ready...',
     };
     return (
-      <div className="flex flex-col items-center justify-center w-full h-full text-center">
-        <div className="relative w-16 h-16">
+      <div className="flex flex-col items-center justify-center w-full h-full text-center bg-white rounded-lg">
+        <div className="relative w-24 h-24 mb-6">
           <div className="loading-spinner"></div>
           <div className="loading-spinner-active"></div>
         </div>
-        <p className="content-title mt-4">{messages[state]}</p>
-        <p className="content-subtitle mt-1">This can take a moment.</p>
+        <h3 className="text-2xl font-semibold text-gray-800 mb-2">{messages[state]}</h3>
+        <p className="text-lg text-gray-600">This can take a moment.</p>
       </div>
     );
 };
 
 const InitialState: React.FC<{ onImageUpload: (file: File, previewUrl: string) => void }> = ({ onImageUpload }) => {
   const handleFile = (file: File | undefined) => {
+    console.log('🔥 WORKSPACE: handleFile called with:', file ? file.name : 'null');
+    
     if (file && file.type.startsWith('image/')) {
+      console.log('✅ WORKSPACE: Valid image file, creating FileReader...');
       const reader = new FileReader();
       reader.onloadend = () => {
+        console.log('📖 WORKSPACE: FileReader finished, calling onImageUpload...');
         if (typeof reader.result === 'string') {
           onImageUpload(file, reader.result);
+          console.log('✅ WORKSPACE: onImageUpload called successfully');
         }
       };
       reader.readAsDataURL(file);
+    } else {
+      console.log('❌ WORKSPACE: Invalid file or not an image');
     }
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    handleFile(event.target.files?.[0]);
+    console.log('📂 WORKSPACE: File input change event fired!');
+    const selectedFile = event.target.files?.[0];
+    console.log('📁 WORKSPACE: Selected file:', selectedFile);
+    handleFile(selectedFile);
+    // Reset the input so the same file can be selected again
+    event.target.value = '';
   };
 
   const onDragOver = (event: React.DragEvent<HTMLLabelElement>) => {
@@ -75,14 +87,17 @@ const InitialState: React.FC<{ onImageUpload: (file: File, previewUrl: string) =
   };
 
   const onDrop = (event: React.DragEvent<HTMLLabelElement>) => {
+    console.log('🎯 WORKSPACE: Drop event fired!');
     event.preventDefault();
-    handleFile(event.dataTransfer.files?.[0]);
+    const droppedFile = event.dataTransfer.files?.[0];
+    console.log('📁 WORKSPACE: Dropped file:', droppedFile);
+    handleFile(droppedFile);
   };
 
   return (
     <div className="flex flex-col items-center justify-center text-center h-full max-w-md mx-auto">
-        <h3 className="section-header text-3xl mb-2">Start Your Creation</h3>
-        <p className="content-subtitle mb-8">Upload your product image to enter the creative studio.</p>
+        <h3 className="section-header text-3xl mb-2">Automatic Ad Generation</h3>
+        <p className="content-subtitle mb-8">Upload your product image and we'll instantly create professional mockups using AI analysis.</p>
         
         <input
           type="file"
@@ -111,6 +126,7 @@ const InitialState: React.FC<{ onImageUpload: (file: File, previewUrl: string) =
 
 const ErrorState: React.FC<{ error: string }> = ({ error }) => {
     const isSafetyError = error.includes('PROHIBITED_CONTENT') || error.includes('SAFETY');
+    const isPersonPhoto = error.includes('photos of people') || error.includes('privacy and consent');
     return (
       <div className="flex flex-col items-center justify-center text-center p-6">
           <WarningIcon className="w-16 h-16 text-red-600 mb-6" />
@@ -121,11 +137,14 @@ const ErrorState: React.FC<{ error: string }> = ({ error }) => {
                   <h4 className="content-title mb-2">Safety Filter Detected</h4>
                   <p className="content-subtitle mb-3">To get the best results, please try:</p>
                   <ul className="list-disc list-inside space-y-1 content-subtitle">
-                      <li>Try using a different product image.</li>
-                      <li>Select a different ad format or slogan style.</li>
-                      <li>If using the "Adjust" tool, try a more neutral description.</li>
+                      {isPersonPhoto && (
+                          <li><strong>For photos with people:</strong> Try the "Professional Portrait Frame" format which is designed to work better with personal photos.</li>
+                      )}
+                      <li>Select a simpler ad format (like "Urban Billboard" or "Magazine Ad").</li>
+                      <li>Use a product image without people if possible.</li>
+                      <li>Try a different slogan style (avoid provocative language).</li>
                   </ul>
-                   <p className="content-subtitle mt-3">The model avoids generating certain types of content.</p>
+                   <p className="content-subtitle mt-3">The AI has strict safety filters for photos containing people to protect privacy and prevent misuse.</p>
               </div>
           )}
       </div>

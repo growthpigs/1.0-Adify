@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { SmartProductAnalysis, Industry, TargetAudience, AdFormat } from '../types';
+import { SmartProductAnalysis, Industry, TargetAudience, AdFormat, SloganType } from '../types';
 import { SparklesIcon, CheckCircleIcon, EditIcon } from './Icons';
 import { AD_FORMATS, SOCIAL_MEDIA_FORMATS, FACEBOOK_AD_FORMATS } from '../constants';
 import { FormatSelectionGrid } from './FormatSelectionGrid';
@@ -7,11 +7,14 @@ import { FormatSelectionGrid } from './FormatSelectionGrid';
 interface SmartAnalysisPopupProps {
     analysis: SmartProductAnalysis;
     isVisible: boolean;
+    isLoading?: boolean;
     onConfirm: () => void;
     onEdit: () => void;
     onClose: () => void;
     onUpdateAnalysis: (updates: Partial<SmartProductAnalysis>) => void;
     onGenerate: (selectedFormats: AdFormat[]) => void;
+    selectedSloganType?: SloganType | null;
+    onSelectSloganType?: (type: SloganType | null) => void;
 }
 
 type TabType = 'analysis' | 'mockups' | 'social' | 'facebook';
@@ -46,17 +49,23 @@ const AUDIENCE_LABELS: Record<TargetAudience, string> = {
     tech_savvy: 'Tech-Savvy Users',
     luxury_consumers: 'Luxury Consumers',
     budget_conscious: 'Budget-Conscious',
-    early_adopters: 'Early Adopters'
+    early_adopters: 'Early Adopters',
+    creative_professionals: 'Creative Pros',
+    artists_designers: 'Artists & Designers',
+    content_creators: 'Content Creators'
 };
 
 export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
     analysis,
     isVisible,
+    isLoading = false,
     onConfirm,
     onEdit,
     onClose,
     onUpdateAnalysis,
-    onGenerate
+    onGenerate,
+    selectedSloganType,
+    onSelectSloganType
 }) => {
     const [showContent, setShowContent] = useState(false);
     const [hoveringConfirm, setHoveringConfirm] = useState(false);
@@ -65,7 +74,11 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
     const [editableIndustry, setEditableIndustry] = useState(analysis.detectedIndustry);
     const [editableAudiences, setEditableAudiences] = useState(analysis.recommendedAudiences);
     const [editableDescription, setEditableDescription] = useState(analysis.userStory);
-    const [editableUserStory, setEditableUserStory] = useState(analysis.userStory);
+    const [imageInstructions, setImageInstructions] = useState(
+        `Place this product in ${analysis.naturalEnvironments[0] || 'a natural environment'}. ` +
+        `The product should be prominently displayed and maintain its original appearance. ` +
+        `Create a professional, photorealistic composition that showcases the product effectively.`
+    );
     const [activeTab, setActiveTab] = useState<TabType>('analysis');
     const [selectedFormats, setSelectedFormats] = useState<AdFormat[]>([]);
     const popupRef = useRef<HTMLDivElement>(null);
@@ -78,7 +91,11 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
             setEditableIndustry(analysis.detectedIndustry);
             setEditableAudiences(analysis.recommendedAudiences);
             setEditableDescription(analysis.userStory);
-            setEditableUserStory(analysis.userStory);
+            setImageInstructions(
+                `Place this product in ${analysis.naturalEnvironments[0] || 'a natural environment'}. ` +
+                `The product should be prominently displayed and maintain its original appearance. ` +
+                `Create a professional, photorealistic composition that showcases the product effectively.`
+            );
         } else {
             setShowContent(false);
         }
@@ -219,20 +236,27 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div ref={popupRef} className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[95vh] overflow-y-auto">
-                {/* Header */}
-                <div className="p-6 border-b border-gray-200">
+            <div ref={popupRef} className="bg-white rounded-xl shadow-xl w-[600px] h-[75vh] max-h-[85vh] flex flex-col overflow-hidden">
+                {/* Compact Header */}
+                <div className="p-3 border-b border-gray-200 bg-gray-50">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <SparklesIcon className="w-6 h-6 text-pink-500" />
-                            <div>
-                                <h3 className="section-header mb-0">🤖 AI Analysis Complete!</h3>
-                                <p className="content-subtitle">Analyze, customize, and choose formats to generate</p>
-                            </div>
+                        <div className="flex items-center gap-2">
+                            <SparklesIcon className="w-4 h-4 text-pink-500" />
+                            <h3 className="text-sm font-semibold text-gray-900">AI Analysis Complete</h3>
                         </div>
-                        {selectedFormats.length > 0 && (
-                            <div className="bg-pink-100 text-pink-800 px-3 py-2 rounded-full text-sm font-medium">
-                                {selectedFormats.length} format{selectedFormats.length !== 1 ? 's' : ''} selected
+                        {/* AI Confidence Badge - Top Right */}
+                        {showContent && (
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs text-gray-600">Confidence:</span>
+                                <div className="flex items-center gap-1">
+                                    <div className="w-12 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                                        <div 
+                                            className="h-full bg-green-500 rounded-full"
+                                            style={{ width: `${analysis.confidence}%` }}
+                                        />
+                                    </div>
+                                    <span className="text-xs font-bold text-green-700">{analysis.confidence}%</span>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -242,10 +266,10 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
                 <div className="border-b border-gray-200">
                     <div className="flex">
                         {[
-                            { id: 'analysis', name: 'Smart Analysis', icon: '🧠' },
-                            { id: 'mockups', name: 'Mockups', icon: '🖼️', count: AD_FORMATS.length },
-                            { id: 'social', name: 'Social Posts', icon: '📱', count: SOCIAL_MEDIA_FORMATS.length },
-                            { id: 'facebook', name: 'Facebook Ads', icon: '🎯', count: FACEBOOK_AD_FORMATS.length }
+                            { id: 'analysis', name: 'Analysis' },
+                            { id: 'mockups', name: 'Mockups', count: AD_FORMATS.length },
+                            { id: 'social', name: 'Social', count: SOCIAL_MEDIA_FORMATS.length },
+                            { id: 'facebook', name: 'Facebook', count: FACEBOOK_AD_FORMATS.length }
                         ].map((tab) => (
                             <button
                                 key={tab.id}
@@ -256,7 +280,6 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
                                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                                 }`}
                             >
-                                <span className="mr-2">{tab.icon}</span>
                                 {tab.name}
                                 {tab.count && (
                                     <span className="ml-2 bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full text-xs">
@@ -269,30 +292,17 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
                 </div>
 
                 {/* Tab Content */}
-                <div className="p-6 max-h-96 overflow-y-auto">
+                <div className="p-4 flex-1 overflow-y-auto">
                     {activeTab === 'analysis' && (
-                        <div className="space-y-6">
-                            {/* Confidence & Basic Info Row */}
-                            <div className="grid grid-cols-3 gap-4">
-                                <div className="col-span-1">
-                                    <label className="block text-xs font-medium text-gray-600 mb-1">AI Confidence</label>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                            <div 
-                                                className={`h-full bg-green-500 rounded-full transition-all duration-1000`}
-                                                style={{ width: showContent ? `${analysis.confidence}%` : '0%' }}
-                                            />
-                                        </div>
-                                        <span className="text-sm font-bold text-green-700">{analysis.confidence}%</span>
-                                        <span className="text-lg">{analysis.confidence > 90 ? "🔥" : "💪"}</span>
-                                    </div>
-                                </div>
-                                <div className="col-span-1">
+                        <div className="space-y-4">
+                            {/* Product Title & Industry Row */}
+                            <div className="grid grid-cols-3 gap-3">
+                                <div className="col-span-2">
                                     <label className="block text-xs font-medium text-gray-600 mb-1">Product Title</label>
                                     <input
                                         value={editableTitle}
                                         onChange={(e) => setEditableTitle(e.target.value)}
-                                        className="w-full p-1 border border-gray-200 rounded text-sm font-semibold"
+                                        className="w-full p-1.5 border border-gray-200 rounded text-sm font-semibold"
                                         placeholder="Product name"
                                     />
                                 </div>
@@ -301,7 +311,7 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
                                     <select
                                         value={editableIndustry}
                                         onChange={(e) => setEditableIndustry(e.target.value as Industry)}
-                                        className="w-full p-1 border border-gray-200 rounded text-sm"
+                                        className="w-full p-1.5 border border-gray-200 rounded text-sm"
                                     >
                                         {Object.entries(INDUSTRY_LABELS).map(([key, label]) => (
                                             <option key={key} value={key}>{label}</option>
@@ -310,13 +320,12 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
                                 </div>
                             </div>
 
-                            {/* Target Audience - Multi-Select */}
+                            {/* Target Audience - Compact 4 across */}
                             <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-2">
-                                    Target Audience 
-                                    <span className="text-xs text-gray-500">(click to toggle)</span>
+                                <label className="block text-xs font-medium text-gray-600 mb-1.5">
+                                    Target Audience <span className="text-xs text-gray-500">(click to toggle)</span>
                                 </label>
-                                <div className="grid grid-cols-3 gap-2 max-h-24 overflow-y-auto">
+                                <div className="grid grid-cols-4 gap-1.5">
                                     {availableAudiences.map((audience) => {
                                         const isSelected = editableAudiences.includes(audience);
                                         
@@ -324,28 +333,22 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
                                             <button
                                                 key={audience}
                                                 onClick={() => toggleAudience(audience)}
-                                                className={`p-2 rounded text-xs text-left transition-all duration-200 ${
+                                                className={`py-1 px-1.5 rounded text-[11px] text-center transition-all duration-200 ${
                                                     isSelected
                                                         ? 'bg-pink-100 border border-pink-300 text-pink-900'
                                                         : 'bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-700'
                                                 }`}
                                             >
-                                                <div className="flex items-center justify-between">
-                                                    <span className="font-medium">{AUDIENCE_LABELS[audience]}</span>
-                                                    {isSelected && <span className="text-pink-600">✓</span>}
-                                                </div>
+                                                <span className="block truncate">{AUDIENCE_LABELS[audience]}</span>
                                             </button>
                                         );
                                     })}
-                                </div>
-                                <div className="text-xs text-gray-500 mt-1">
-                                    Selected: {editableAudiences.length} audience{editableAudiences.length !== 1 ? 's' : ''}
                                 </div>
                             </div>
 
                             {/* Editable Description */}
                             <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">Image Description</label>
                                 <textarea
                                     value={editableDescription}
                                     onChange={(e) => setEditableDescription(e.target.value)}
@@ -355,24 +358,27 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
                                 />
                             </div>
 
-                            {/* Editable User Story */}
+                            {/* Image Instructions (formerly User Story) */}
                             <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">User Story</label>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">
+                                    Image Instructions 
+                                    <span className="text-xs text-gray-500 ml-1">(AI prompt - edit to customize)</span>
+                                </label>
                                 <textarea
-                                    value={editableUserStory}
-                                    onChange={(e) => setEditableUserStory(e.target.value)}
-                                    className="w-full p-2 border border-blue-200 bg-blue-50 rounded-md text-sm resize-none"
-                                    rows={2}
-                                    placeholder="What problem does this solve for users?"
+                                    value={imageInstructions}
+                                    onChange={(e) => setImageInstructions(e.target.value)}
+                                    className="w-full p-2 border border-blue-200 bg-blue-50 rounded-md text-xs resize-none font-mono"
+                                    rows={3}
+                                    placeholder="Instructions for AI image generation..."
                                 />
                             </div>
 
                             {/* Multi-Select Environment Options */}
                             <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-2">
-                                    Natural Environment Options 
-                                    <span className="text-xs text-gray-500">(click to toggle)</span>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">
+                                    Natural Environment Options
                                 </label>
+                                <p className="text-xs text-gray-500 mb-2">Choose where your product will be placed in the scene</p>
                                 <div className="grid grid-cols-2 gap-2">
                                     {analysis.naturalEnvironments.map((environment, index) => {
                                         const isSelected = selectedEnvironments.includes(environment);
@@ -382,14 +388,14 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
                                             <button
                                                 key={environment}
                                                 onClick={() => toggleEnvironment(environment)}
-                                                className={`p-2 rounded-md border text-left text-sm transition-all duration-200 ${
+                                                className={`py-1.5 px-2 rounded-md border text-left text-xs leading-tight transition-all duration-200 ${
                                                     isSelected
                                                         ? 'bg-green-100 border-green-300 ring-2 ring-green-200 text-green-900'
                                                         : 'bg-gray-50 border-gray-200 hover:bg-gray-100 text-gray-700'
                                                 }`}
                                             >
                                                 <div className="flex items-center justify-between">
-                                                    <span className="font-medium">{environment}</span>
+                                                    <span className="font-medium text-xs">{environment}</span>
                                                     <div className="flex items-center gap-1">
                                                         {isRecommended && <span className="text-yellow-500">⭐</span>}
                                                         {isSelected && <span className="text-green-600">✓</span>}
@@ -401,6 +407,35 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
                                 </div>
                                 <div className="text-xs text-gray-500 mt-1">
                                     Selected: {selectedEnvironments.length} environment{selectedEnvironments.length !== 1 ? 's' : ''}
+                                </div>
+                            </div>
+                            
+                            {/* Text Generation - NEW */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">Text (Optional)</label>
+                                <p className="text-xs text-gray-500 mb-2">AI will create an appropriate phrase and add it to the image</p>
+                                <div className="grid grid-cols-3 gap-1.5">
+                                    {[
+                                        { id: 'hook', name: 'Hook' },
+                                        { id: 'tagline', name: 'Tagline' },
+                                        { id: 'meme', name: 'Meme' },
+                                        { id: 'joke', name: 'Joke' },
+                                        { id: 'quote', name: 'Quote' },
+                                        { id: 'fun_fact', name: 'Fun Fact' },
+                                    ].map(type => (
+                                        <button
+                                            key={type.id}
+                                            onClick={() => onSelectSloganType && onSelectSloganType(selectedSloganType === type.id as SloganType ? null : type.id as SloganType)}
+                                            disabled={isLoading || !onSelectSloganType}
+                                            className={`py-1 px-2 text-xs rounded-md transition-all font-medium ${
+                                                selectedSloganType === type.id
+                                                    ? 'bg-pink-500 text-white'
+                                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                            } ${isLoading || !onSelectSloganType ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        >
+                                            {type.name}
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
                         </div>
@@ -419,21 +454,24 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
                     )}
                 </div>
 
-                {/* Next Steps Guide */}
-                <div className="px-6 py-4 bg-blue-50 border-t border-blue-200">
-                    <h4 className="text-sm font-medium text-blue-900 mb-2">🎯 What happens next?</h4>
-                    <div className="text-xs text-blue-800 space-y-1">
-                        <div className="flex items-center gap-2">
-                            <span className="w-1 h-1 bg-blue-400 rounded-full"></span>
-                            <span>AI will automatically place your product in its natural environment</span>
+                {/* Compact Next Steps */}
+                <div className="px-4 py-2 bg-blue-50 border-t border-blue-200">
+                    <div className="text-xs text-blue-800 grid grid-cols-2 gap-x-4 gap-y-1">
+                        <div className="flex items-start gap-1">
+                            <span className="w-1 h-1 bg-blue-400 rounded-full mt-1 flex-shrink-0"></span>
+                            <span>AI places product naturally</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <span className="w-1 h-1 bg-blue-400 rounded-full"></span>
-                            <span>Smart context-aware placement based on your product type</span>
+                        <div className="flex items-start gap-1">
+                            <span className="w-1 h-1 bg-blue-400 rounded-full mt-1 flex-shrink-0"></span>
+                            <span>Context-aware placement</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <span className="w-1 h-1 bg-blue-400 rounded-full"></span>
-                            <span>Click "Generate Smart Ad" to create your professional mockup</span>
+                        <div className="flex items-start gap-1">
+                            <span className="w-1 h-1 bg-blue-400 rounded-full mt-1 flex-shrink-0"></span>
+                            <span>Professional mockup output</span>
+                        </div>
+                        <div className="flex items-start gap-1">
+                            <span className="w-1 h-1 bg-blue-400 rounded-full mt-1 flex-shrink-0"></span>
+                            <span>Edit after generation</span>
                         </div>
                     </div>
                 </div>
@@ -443,26 +481,55 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
                     {activeTab === 'analysis' ? (
                         <div className="flex gap-3">
                             <button
-                                onClick={() => {
+                                onClick={async () => {
+                                    console.log('🎆 Generate Smart Ad clicked at', new Date().toISOString());
+                                    console.log('🔍 Props check:', {
+                                        onGenerate: typeof onGenerate,
+                                        onUpdateAnalysis: typeof onUpdateAnalysis,
+                                        onClose: typeof onClose
+                                    });
+                                    
                                     // Save all edits and generate with Natural Environment
+                                    console.log('💾 Updating analysis...');
                                     onUpdateAnalysis({
                                         suggestedTitle: editableTitle,
                                         detectedIndustry: editableIndustry,
                                         recommendedAudiences: editableAudiences,
-                                        userStory: editableUserStory,
+                                        userStory: editableDescription,
                                         naturalEnvironments: selectedEnvironments.length > 0 ? selectedEnvironments : analysis.naturalEnvironments
                                     });
-                                    // Automatically generate with Natural Environment
-                                    onGenerate([]);  // Empty array will trigger auto-selection
+                                    
+                                    console.log('🌱 Calling onGenerate with empty array...');
+                                    try {
+                                        // Try awaiting if it's async
+                                        await onGenerate([]);  // Empty array will trigger auto-selection
+                                        console.log('✅ onGenerate completed');
+                                    } catch (error) {
+                                        console.error('❌ onGenerate threw error:', error);
+                                    }
+                                    
+                                    console.log('🚪 Closing popup...');
+                                    // Close popup after triggering generation
                                     onClose();
+                                    console.log('🎁 All done from popup side');
                                 }}
-                                className="btn-primary flex items-center justify-center gap-2 flex-1"
+                                disabled={isLoading}
+                                className={`btn-primary flex items-center justify-center gap-2 h-10 px-8 ${
+                                    isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                                }`}
                             >
-                                <span>🎨 Generate Smart Ad</span>
+                                {isLoading ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        <span>Generating...</span>
+                                    </>
+                                ) : (
+                                    <span>🎨 Generate Smart Ad</span>
+                                )}
                             </button>
                             <button
                                 onClick={onClose}
-                                className="btn-secondary-neutral px-6"
+                                className="btn-secondary-neutral px-6 h-10"
                             >
                                 Cancel
                             </button>
@@ -491,16 +558,23 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
                                             onClose();
                                         }
                                     }}
-                                    disabled={selectedFormats.length === 0}
-                                    className={`btn-primary flex items-center justify-center gap-2 flex-1 ${
-                                        selectedFormats.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
+                                    disabled={selectedFormats.length === 0 || isLoading}
+                                    className={`btn-primary flex items-center justify-center gap-2 flex-1 max-w-xs ${
+                                        selectedFormats.length === 0 || isLoading ? 'opacity-50 cursor-not-allowed' : ''
                                     }`}
                                 >
-                                    <span>🎨 Generate {selectedFormats.length > 0 ? selectedFormats.length : ''} Ad{selectedFormats.length !== 1 ? 's' : ''}</span>
+                                    {isLoading ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                            <span>Generating...</span>
+                                        </>
+                                    ) : (
+                                        <span>🎨 Generate {selectedFormats.length > 0 ? selectedFormats.length : ''} Ad{selectedFormats.length !== 1 ? 's' : ''}</span>
+                                    )}
                                 </button>
                                 <button
                                     onClick={onClose}
-                                    className="btn-secondary-neutral px-6"
+                                    className="btn-secondary-neutral px-6 h-10"
                                 >
                                     Cancel
                                 </button>

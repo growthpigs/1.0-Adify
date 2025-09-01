@@ -7,14 +7,14 @@ import {
     TwoPeopleIcon, MessageSquareIcon, YouTubeIcon, LightbulbIcon,
     LinkedInIcon, PodcastIcon, RedditIcon, ProductHuntIcon,
     UserIcon, AlertTriangleIcon, ChevronsRightIcon, CheckCircleIcon, BookOpenIcon,
-    HelpCircleIcon, StarIcon, SearchIcon, UsersIcon, TagIcon, ListIcon, TargetIcon, LeafIcon
+    HelpCircleIcon, StarIcon, SearchIcon, UsersIcon, TagIcon, ListIcon, TargetIcon, LeafIcon, ImageIcon
 } from './components/Icons';
 import {
     LaptopIcon, MobileAppIcon, WallpaperIcon, BusinessCardIcon, WebsiteIcon, SmartTVIcon,
     InstagramIcon, TikTokIcon2, PinterestIcon, DiscordIcon, ShoppingIcon, VideoIcon
 } from './components/NewIcons';
 
-const DESIGN_RULES = `
+export const DESIGN_RULES = `
 IMPORTANT DESIGN RULES:
 1.  **Image Containment**: The user's uploaded product image MUST be placed within a container, frame, or designated area. It must NEVER go edge-to-edge on the final generated image. There must always be padding or a background visible around it.
 2.  **Text Placement**: ALL text (slogans, captions, headlines) MUST be placed OUTSIDE the user's product image area. Do NOT overlay any text directly on top of the product image itself. Text should be in its own designated space (e.g., a header, footer, or colored block).
@@ -424,5 +424,12 @@ export const FACEBOOK_AD_FORMATS: AdFormat[] = [
         prompt: 'Create carousel ad copy showcasing multiple product features or use cases. Each card should highlight a different benefit or feature. Card 1: Main value proposition. Cards 2-4: Supporting features/benefits. Final card: Strong call-to-action with special offer or incentive.',
         icon: ChevronsRightIcon,
         type: 'facebook'
+    },
+    {
+        id: 50,
+        name: 'Professional Portrait Frame',
+        prompt: `Create a clean, professional frame or border layout where the uploaded image appears as a contained photo within a stylish frame or card design. Add subtle professional graphics or patterns around the frame, and include any slogan text in a dedicated text area below or beside the framed image. This format treats the image respectfully as a professional portrait or reference photo. ${DESIGN_RULES}`,
+        icon: ImageIcon,
+        type: 'mockup'
     }
 ];

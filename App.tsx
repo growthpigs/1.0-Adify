@@ -1,18 +1,20 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
 import { AdFormat, SloganType, UploadedImage, FacebookAdContent, GeneratedContent, MockupContent, SmartProductInput } from './types';
-import { generateAdMockup, generateSlogan, editImage, describeImage, generateFacebookAdContent } from './services/geminiService';
+import { generateAdMockup, generateSlogan, editImage, describeImage, generateFacebookAdContent, analyzeProduct } from './services/geminiService';
 import { generateMockAnalysis, generateNaturalEnvironmentPrompt, getNaturalEnvironmentFormat } from './services/mockIntelligence';
-import { defaultImageBase64, base64ToFile } from './utils/imageUtils';
+import { AD_FORMATS } from './constants';
 import ImageUploader from './components/ImageUploader';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { Sidebar } from './components/Sidebar';
 import { Workspace } from './components/Workspace';
 import { SmartAnalysisPopup } from './components/SmartAnalysisPopup';
-import { SmartProductInput as SmartProductInputComponent } from './components/SmartProductInput';
 import { AnalysisLoader } from './components/AnalysisLoader';
+import { GenerationLoader } from './components/GenerationLoader';
 import { GenerationProgress } from './components/GenerationProgress';
+import { AppSkeleton } from './components/SkeletonLoader';
 
 export type LoadingState = 'idle' | 'describing' | 'generating_text' | 'generating_image' | 'editing';
 
@@ -27,6 +29,8 @@ export interface LastGenerationParams {
 
 // FIX: Removed invalid text nodes and implemented the full App component.
 export const App: React.FC = () => {
+    console.log('🚀 APP: App component initializing...');
+    
     const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
     const [selectedImage, setSelectedImage] = useState<UploadedImage | null>(null);
     const [imageDescription, setImageDescription] = useState('');
@@ -61,25 +65,27 @@ export const App: React.FC = () => {
     const canUndo = currentHistoryIndex > 0;
     const canRedo = currentHistoryIndex < history.length - 1;
 
-    // Default image setup
+    // State to control initial loading/skeleton display
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
+    
+    // Clean startup - show skeleton briefly then reveal app
     useEffect(() => {
-        const init = () => {
-            try {
-                const file = base64ToFile(defaultImageBase64, "default_product.png");
-                const defaultImage: UploadedImage = {
-                    id: 'default-0',
-                    file: file,
-                    previewUrl: defaultImageBase64
-                };
-                setUploadedImages([defaultImage]);
-                setSelectedImage(defaultImage);
-            } catch (error) {
-                console.error('Failed to load default image:', error);
-                setError('Failed to load default image');
-            }
-        };
-        init();
+        console.log('🏁 App initialized with clean state');
+        // Show skeleton for a moment to prevent flash of empty content
+        const timer = setTimeout(() => {
+            setIsInitialLoad(false);
+        }, 500); // Brief delay for smooth transition
+        
+        return () => clearTimeout(timer);
     }, []);
+    
+    // Auto-select first image when images exist but none selected
+    useEffect(() => {
+        if (uploadedImages.length > 0 && !selectedImage) {
+            console.log('🎯 Auto-selecting first image');
+            setSelectedImage(uploadedImages[0]);
+        }
+    }, [uploadedImages.length]); // Only depend on length to avoid infinite loops
 
     const updateHistory = (newContent: GeneratedContent | null) => {
         const newHistory = history.slice(0, currentHistoryIndex + 1);
@@ -89,11 +95,18 @@ export const App: React.FC = () => {
     };
 
     const handleImageUpload = useCallback(async (file: File, previewUrl: string) => {
+        console.log('📤 UPLOAD TRIGGERED: Image upload handler called!');
+        console.log('📁 File details:', { name: file.name, size: file.size, type: file.type });
+        console.log('🖼️ Preview URL length:', previewUrl.length);
+        
         const newImage: UploadedImage = {
             id: `${file.name}-${new Date().getTime()}`,
             file,
             previewUrl,
+            name: file.name,
         };
+        
+        console.log('💾 Setting image state...');
         setUploadedImages(prev => [newImage, ...prev]);
         setSelectedImage(newImage);
         setHistory([]);
@@ -101,41 +114,85 @@ export const App: React.FC = () => {
         setError(null);
         setSessionGallery([]);
         setLastGenerationParams(null);
+        console.log('✅ Image state set successfully');
         
-        // Trigger smart analysis with loading indicator
-        setIsAnalyzing(true);
+        // Image uploaded successfully - provide feedback and start analysis
+        console.log('✅ Image uploaded successfully, starting smart analysis...');
+        toast.success(`Image "${file.name}" uploaded successfully! Analyzing product...`);
+        
+        // Start smart analysis automatically and store with image
         try {
-            // Add minimum 3-second delay for users to read the loader
-            const [analysis] = await Promise.all([
-                generateMockAnalysis(file, smartInput.description),
-                new Promise(resolve => setTimeout(resolve, 3000))
-            ]);
+            console.log('🧠 Starting automatic smart analysis...');
+            setIsAnalyzing(true);
             
-            setSmartInput(prev => ({
-                ...prev,
-                title: analysis.suggestedTitle,
-                industry: analysis.detectedIndustry,
-                targetAudiences: analysis.recommendedAudiences,
-                description: prev.description || analysis.userStory,
-                analysis,
-                isAnalysisConfirmed: false
-            }));
-            setShowAnalysisPopup(true);
-        } catch (error) {
-            console.warn('Smart analysis failed:', error);
-        } finally {
+            // Trigger smart analysis with default values
+            const analysisResult = await analyzeProduct(
+                newImage.file, 
+                'Product', // Default title
+                'AI-powered product analysis' // Default description
+            );
+            console.log('📊 Analysis result:', analysisResult);
+            
+            // Update the image with analysis results and smart input
+            const analysisSmartInput: SmartProductInput = {
+                title: analysisResult.suggestedTitle,
+                description: 'AI-powered product analysis',
+                industry: analysisResult.detectedIndustry,
+                targetAudiences: analysisResult.recommendedAudiences,
+                analysis: analysisResult,
+                isAnalysisConfirmed: true
+            };
+            
+            // Update the uploaded image with analysis data
+            const updatedImage = {
+                ...newImage,
+                analysis: analysisResult,
+                smartInput: analysisSmartInput
+            };
+            
+            // Update state with the analyzed image
+            setUploadedImages(prev => [updatedImage, ...prev.slice(1)]);
+            setSelectedImage(updatedImage);
+            setSmartInput(analysisSmartInput);
             setIsAnalyzing(false);
+            
+            // Show the analysis popup for user confirmation
+            console.log('🎯 Showing smart analysis popup...');
+            setShowAnalysisPopup(true);
+            
+            toast.success('Product analyzed! Please review and confirm.');
+            
+        } catch (error) {
+            console.error('❌ Smart analysis failed:', error);
+            setIsAnalyzing(false);
+            toast.error('Analysis failed, but you can still generate manually');
+            // Continue without analysis - user can still generate manually
         }
-    }, [smartInput.description]);
+    }, [smartInput]);
 
     const handleGenerateDescription = useCallback(async () => {
-        if (!selectedImage) return;
+        console.log('🔍 CRITICAL: handleGenerateDescription called');
+        console.log('📸 selectedImage check:', selectedImage ? 
+            `Present: ${selectedImage.file.name} (${selectedImage.file.size} bytes)` : 'NULL - PROBLEM!');
+        
+        if (!selectedImage) {
+            console.error('❌ CRITICAL: No selectedImage in handleGenerateDescription!');
+            return;
+        }
+        
         setIsDescriptionLoading(true);
         setError(null);
         try {
+            console.log('📝 Calling describeImage with file:', {
+                name: selectedImage.file.name,
+                size: selectedImage.file.size,
+                type: selectedImage.file.type
+            });
             const desc = await describeImage(selectedImage.file);
+            console.log('✅ Description SUCCESS:', desc);
             setImageDescription(desc);
         } catch (e: any) {
+            console.error('❌ Description FAILED:', e);
             setError(e.message || 'Failed to generate description.');
         } finally {
             setIsDescriptionLoading(false);
@@ -143,25 +200,109 @@ export const App: React.FC = () => {
     }, [selectedImage]);
 
     useEffect(() => {
+        console.log('👀 CRITICAL: selectedImage effect triggered');
+        console.log('📸 Current selectedImage:', selectedImage ? {
+            id: selectedImage.id,
+            name: selectedImage.file.name,
+            size: selectedImage.file.size,
+            type: selectedImage.file.type
+        } : 'NULL');
+        
         if (selectedImage) {
+            console.log('🚀 Auto-triggering description generation...');
             handleGenerateDescription();
+        } else {
+            console.log('⚠️ ALERT: selectedImage is null, skipping description');
         }
     }, [selectedImage, handleGenerateDescription]);
 
-    const handleGenerate = useCallback(async () => {
-        const format = selectedFormat;
+    const handleGenerate = useCallback(async (overrideFormatOrEnvironment?: AdFormat | string) => {
+        // Determine if we got a format or an environment string
+        let overrideFormat: AdFormat | undefined;
+        let selectedEnvironment: string | undefined;
+        
+        if (typeof overrideFormatOrEnvironment === 'string') {
+            selectedEnvironment = overrideFormatOrEnvironment;
+        } else {
+            overrideFormat = overrideFormatOrEnvironment;
+        }
+        console.log('🎯 handleGenerate called at', new Date().toISOString());
+        console.log('📸 selectedImage:', selectedImage ? `${selectedImage.file.name} (${selectedImage.file.size} bytes)` : 'NULL');
+        console.log('🎨 selectedFormat:', selectedFormat?.name || 'NULL');
+        console.log('🌿 isNaturalEnvironmentSelected:', isNaturalEnvironmentSelected);
+        console.log('📝 smartInput:', smartInput);
+        console.log('📄 imageDescription:', imageDescription);
+        
+        // Add a visual indicator that generation started
+        const startTime = Date.now();
+        
+        let format = overrideFormat || selectedFormat;
         const sloganType = selectedSloganType;
         
         // Use smart input description if available, fallback to legacy field
         const description = smartInput.description || imageDescription;
+        console.log('📋 Final description used:', description || 'NONE');
         
-        // Check if Natural Environment is selected
-        if (isNaturalEnvironmentSelected) {
-            // Use Natural Environment format - treat it like any other format
-            const naturalFormat = getNaturalEnvironmentFormat();
-            if (!naturalFormat) {
+        // Check prerequisites first
+        if (!selectedImage) {
+            console.error('❌ CRITICAL: No image selected in handleGenerate! State might have been cleared.');
+            console.error('📦 State dump at generation time:', {
+                selectedImage: selectedImage ? 'Present' : 'NULL',
+                uploadedImages: uploadedImages.length,
+                smartInput,
+                imageDescription: imageDescription ? 'Present' : 'NULL',
+                selectedFormat: selectedFormat?.name,
+                isNaturalEnvironmentSelected
+            });
+            toast.error('Please upload an image first');
+            setError("Please upload an image first.");
+            return;
+        }
+        
+        if (!description && !imageDescription) {
+            console.error('❌ CRITICAL: No description available!');
+            console.error('📝 Description state:', {
+                smartInputDescription: smartInput.description,
+                imageDescription: imageDescription,
+                combinedDescription: description
+            });
+            toast.error('Please wait for image analysis to complete');
+            setError("Please wait for image analysis to complete.");
+            return;
+        }
+        
+        console.log('✅ Prerequisites passed, continuing...');
+        
+        // If no format provided, auto-select Natural Environment
+        if (!format) {
+            console.log('🔍 No format selected, auto-selecting Natural Environment...');
+            const naturalEnvironmentFormat = AD_FORMATS.find(f => f.name === 'Natural Environment');
+            if (naturalEnvironmentFormat) {
+                console.log('✅ Found Natural Environment format, using it');
+                format = naturalEnvironmentFormat;
+                // Don't set state here, just use the format directly
+            } else {
                 setError("Natural Environment format not available.");
                 return;
+            }
+        }
+        
+        // Check if we're using Natural Environment
+        const isNaturalEnv = format?.name === 'Natural Environment';
+        if (isNaturalEnv) {
+            console.log('🌿 Using Natural Environment format');
+            // We already have the Natural Environment format in 'format' variable
+            const naturalFormat = format;
+            
+            // If an environment was selected, update the prompt
+            let environmentPrompt = naturalFormat.prompt;
+            if (selectedEnvironment) {
+                console.log('🌍 Using selected environment:', selectedEnvironment);
+                environmentPrompt = `Place this product in ${selectedEnvironment}. The product should be prominently displayed and maintain its original appearance. Create a professional, photorealistic composition that showcases the product effectively.`;
+            } else if (selectedImage?.analysis?.naturalEnvironments?.[0]) {
+                // Auto-use the first recommended environment if no selection was made
+                console.log('🌆 Auto-using first recommended environment:', selectedImage.analysis.naturalEnvironments[0]);
+                environmentPrompt = `Place this product in ${selectedImage.analysis.naturalEnvironments[0]}. The product should be prominently displayed and maintain its original appearance. Create a professional, photorealistic composition that showcases the product effectively.`;
             }
             
             // Use the Natural Environment format with its built-in prompt
@@ -169,16 +310,25 @@ export const App: React.FC = () => {
             setLoadingState('generating_image');
 
             try {
+                console.log('🚀 Starting Natural Environment generation...');
                 let slogan = '';
                 if (sloganType) {
+                    console.log('📝 Generating slogan first...');
                     setLoadingState('generating_text');
                     slogan = await generateSlogan(selectedImage.file, sloganType);
+                    console.log('✅ Slogan generated:', slogan);
                 }
                 
                 setLastGenerationParams({ format: naturalFormat, sloganType, slogan, description, selectedImage });
+                console.log('🎨 Calling generateAdMockup with:', {
+                    prompt: environmentPrompt.substring(0, 100) + '...',
+                    slogan,
+                    description
+                });
                 setLoadingState('generating_image');
                 
-                const result = await generateAdMockup(selectedImage.file, naturalFormat.prompt, slogan, description);
+                const result = await generateAdMockup(selectedImage.file, environmentPrompt, slogan, description);
+                console.log('🎉 generateAdMockup returned:', result);
                 if (!result.imageUrl) throw new Error("Natural environment generation failed.");
 
                 const newContent: MockupContent = { imageUrl: result.imageUrl, slogan };
@@ -191,18 +341,6 @@ export const App: React.FC = () => {
                 setLoadingState('idle');
             }
             return;
-        }
-        
-        if (!format) {
-            // Auto-select Natural Environment format if none selected
-            const naturalEnvironmentFormat = AD_FORMATS.find(f => f.name === 'Natural Environment');
-            if (naturalEnvironmentFormat) {
-                setSelectedFormat(naturalEnvironmentFormat);
-                format = naturalEnvironmentFormat;
-            } else {
-                setError("Please select an ad format first.");
-                return;
-            }
         }
         
         if (!selectedImage || !description) {
@@ -249,13 +387,22 @@ export const App: React.FC = () => {
             }
 
         } catch (e: any) {
-            console.error("Generation failed:", e);
-            setError(e.message || 'An unknown error occurred during generation.');
+            console.error("🚨 Generation failed:", e);
+            console.error("🔍 Error details:", {
+                message: e.message,
+                stack: e.stack,
+                name: e.name
+            });
+            
+            // Show detailed error to user
+            const errorMessage = e.message || 'An unknown error occurred during generation.';
+            setError(`Generation failed: ${errorMessage}`);
             updateHistory(null); // Add a null entry to history to represent the failed state
         } finally {
+            console.log("🏁 Setting loading state to idle");
             setLoadingState('idle');
         }
-    }, [selectedImage, imageDescription, history, currentHistoryIndex, selectedFormat, selectedSloganType]);
+    }, [selectedImage, imageDescription, history, currentHistoryIndex, selectedFormat, selectedSloganType, smartInput]);
 
     const handleEdit = useCallback(async (editPrompt: string) => {
         const currentContent = history[currentHistoryIndex];
@@ -360,6 +507,24 @@ export const App: React.FC = () => {
     const handleSelectFromLibrary = (image: UploadedImage) => {
         if (image.id !== selectedImage?.id) {
             setSelectedImage(image);
+            
+            // Load the image's stored smart input data if available
+            if (image.smartInput) {
+                setSmartInput(image.smartInput);
+                setImageDescription(image.smartInput.description);
+            } else {
+                // Reset to default if no analysis available
+                setSmartInput({
+                    title: '',
+                    description: '',
+                    industry: null,
+                    targetAudiences: [],
+                    isAnalysisConfirmed: false,
+                    analysis: null
+                });
+                setImageDescription('');
+            }
+            
             setHistory([]);
             setCurrentHistoryIndex(-1);
             setError(null);
@@ -368,9 +533,28 @@ export const App: React.FC = () => {
         }
     };
     
+    const handleDeleteFromLibrary = (imageId: string) => {
+        setUploadedImages(prev => prev.filter(img => img.id !== imageId));
+        // If we're deleting the currently selected image, select the first remaining one
+        if (selectedImage?.id === imageId) {
+            const remainingImages = uploadedImages.filter(img => img.id !== imageId);
+            if (remainingImages.length > 0) {
+                setSelectedImage(remainingImages[0]);
+            } else {
+                setSelectedImage(null);
+                setImageDescription('');
+                setHistory([]);
+                setCurrentHistoryIndex(-1);
+                setSessionGallery([]);
+                setLastGenerationParams(null);
+            }
+        }
+    };
+    
     const handleSelectFromGallery = (content: GeneratedContent) => {
         updateHistory(content);
     };
+
 
     // Smart Analysis Handlers
     const handleAnalysisConfirm = () => {
@@ -411,6 +595,11 @@ export const App: React.FC = () => {
     };
 
 
+    // Show skeleton during initial load
+    if (isInitialLoad) {
+        return <AppSkeleton />;
+    }
+    
     return (
         <div className="flex flex-col min-h-screen bg-gray-50">
             <Header />
@@ -419,6 +608,7 @@ export const App: React.FC = () => {
                     imageLibrary={uploadedImages}
                     selectedImage={selectedImage}
                     onSelectFromLibrary={handleSelectFromLibrary}
+                    onDeleteFromLibrary={handleDeleteFromLibrary}
                     onGenerate={handleGenerate}
                     isLoading={isLoading || isAnalyzing}
                     smartInput={smartInput}
@@ -467,17 +657,21 @@ export const App: React.FC = () => {
                 </div>
             </main>
 
-            {/* Analysis Loading Indicator */}
+            {/* Loading Indicators */}
             {isAnalyzing && <AnalysisLoader />}
+            {(loadingState === 'generating_image' || loadingState === 'generating_text') && <GenerationLoader />}
             
             {/* Smart Analysis Popup */}
             {smartInput.analysis && (
                 <SmartAnalysisPopup
                     analysis={smartInput.analysis}
                     isVisible={showAnalysisPopup}
+                    isLoading={isLoading}
                     onConfirm={handleAnalysisConfirm}
                     onEdit={handleAnalysisEdit}
                     onClose={handleAnalysisClose}
+                    selectedSloganType={selectedSloganType}
+                    onSelectSloganType={setSelectedSloganType}
                     onUpdateAnalysis={(updates) => {
                         setSmartInput(prev => ({
                             ...prev,
@@ -485,6 +679,11 @@ export const App: React.FC = () => {
                         }));
                     }}
                     onGenerate={async (selectedFormats) => {
+                        console.log('🌊 onGenerate in App.tsx called at', new Date().toISOString());
+                        console.log('📷 Current selectedImage:', selectedImage ? `${selectedImage.file.name}` : 'NULL');
+                        console.log('📄 Current imageDescription:', imageDescription);
+                        console.log('🧠 Current smartInput:', smartInput);
+                        
                         // If no formats selected, use Natural Environment automatically
                         let formatsToUse = selectedFormats;
                         
@@ -493,25 +692,59 @@ export const App: React.FC = () => {
                             const naturalEnvFormat = AD_FORMATS.find(f => f.name === 'Natural Environment');
                             if (naturalEnvFormat) {
                                 formatsToUse = [naturalEnvFormat];
-                                console.log('Auto-selected Natural Environment format');
+                                console.log('🌿 Auto-selected Natural Environment format');
                             }
                         }
                         
-                        console.log('Generating ads for formats:', formatsToUse);
+                        console.log('🎨 Formats to use:', formatsToUse.map(f => f.name));
                         
                         if (formatsToUse.length > 0 && selectedImage) {
+                            console.log('🔄 Setting format and starting generation...');
                             // Set the first format and generate
                             setSelectedFormat(formatsToUse[0]);
                             
-                            // Close the popup first
-                            setShowAnalysisPopup(false);
+                            // CRITICAL FIX: Call handleGenerate BEFORE closing popup
+                            // to ensure state is still available
+                            console.log('⚠️ Starting generation BEFORE closing popup');
+                            console.log('🔍 Current state:', {
+                                image: selectedImage?.file.name,
+                                format: formatsToUse[0].name,
+                                description: smartInput.description || imageDescription
+                            });
                             
-                            // Start generation
-                            await handleGenerate();
+                            // Start generation FIRST with the format directly
+                            console.log('🚀 Calling handleGenerate with format:', formatsToUse[0].name);
+                            try {
+                                // PASS THE FORMAT DIRECTLY to avoid async state issues
+                                await handleGenerate(formatsToUse[0]);
+                                console.log('✅ handleGenerate completed successfully');
+                            } catch (error) {
+                                console.error('❌ handleGenerate failed:', error);
+                            }
+                            
+                            // THEN close the popup
+                            console.log('🚪 Now closing popup...');
+                            setShowAnalysisPopup(false);
+                        } else {
+                            console.error('❌ Cannot generate:', {
+                                hasFormats: formatsToUse.length > 0,
+                                hasImage: !!selectedImage
+                            });
+                            toast.error(!selectedImage ? 'Please upload an image first' : 'Please select a format');
                         }
                     }}
                 />
             )}
+            <Toaster 
+                position="top-right"
+                toastOptions={{
+                    duration: 4000,
+                    style: {
+                        background: '#363636',
+                        color: '#fff',
+                    },
+                }}
+            />
         </div>
     );
 };

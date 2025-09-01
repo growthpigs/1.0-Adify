@@ -22,6 +22,7 @@ export interface FacebookAdContent {
     imageUrl: string;
     headline: string;
     bodyText: string;
+    imagePrompt?: string;
 }
 
 export type GeneratedContent = MockupContent | FacebookAdContent;
@@ -32,6 +33,10 @@ export interface UploadedImage {
     id: string;
     file: File;
     previewUrl: string;
+    name: string;
+    description?: string;
+    analysis?: SmartProductAnalysis;
+    smartInput?: SmartProductInput;
 }
 
 // Smart Analysis Types
@@ -64,7 +69,10 @@ export type TargetAudience =
     | 'tech_savvy' 
     | 'luxury_consumers' 
     | 'budget_conscious' 
-    | 'early_adopters';
+    | 'early_adopters'
+    | 'creative_professionals'
+    | 'artists_designers'
+    | 'content_creators';
 
 export type ProductType = 
     | 'physical_product' 

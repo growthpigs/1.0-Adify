@@ -21,6 +21,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload }) => {
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     handleFile(event.target.files?.[0]);
+    // Reset the input so the same file can be selected again
+    event.target.value = '';
   };
   
   const onDragOver = useCallback((event: React.DragEvent<HTMLLabelElement>) => {

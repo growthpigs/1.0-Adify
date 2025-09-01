@@ -1,371 +1,405 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { GeneratedAdResult, SloganType, AdFormat } from '../types';
+import { GoogleGenAI, Modality, Type } from '@google/genai';
+import { GeneratedAdResult, SloganType, AdFormat, FacebookAdContent, SmartProductAnalysis, Industry, TargetAudience, ProductType } from '../types';
+import { DESIGN_RULES } from '../constants';
 
-let aiInstance: GoogleGenerativeAI | null = null;
+let aiInstance: GoogleGenAI | null = null;
 
-const getAi = (): GoogleGenerativeAI => {
+const getAi = (): GoogleGenAI => {
     if (aiInstance) {
         return aiInstance;
     }
-    const apiKey = process.env.API_KEY;
-    console.log('API Key status:', apiKey ? `Set (${apiKey.substring(0, 10)}...)` : 'Not set');
-    
-    if (!apiKey) {
+    if (!process.env.API_KEY) {
         throw new Error("API_KEY environment variable not set. The app cannot connect to the AI service.");
     }
-    aiInstance = new GoogleGenerativeAI(apiKey);
+    aiInstance = new GoogleGenAI({ apiKey: process.env.API_KEY });
     return aiInstance;
 };
 
-const fileToGenerativePart = async (file: File): Promise<{
-    inlineData: {
-        data: string;
-        mimeType: string;
+const dataUrlToGenerativePart = async (dataUrl: string) => {
+  const response = await fetch(dataUrl);
+  const blob = await response.blob();
+  const base64EncodedDataPromise = new Promise<string>((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      resolve((reader.result as string).split(',')[1]);
     };
-}> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            if (typeof reader.result === 'string') {
-                // Remove the data URL prefix (e.g., "data:image/png;base64,")
-                const base64Data = reader.result.split(',')[1];
-                resolve({
-                    inlineData: {
-                        data: base64Data,
-                        mimeType: file.type,
-                    },
-                });
-            } else {
-                reject(new Error('Failed to read file'));
-            }
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
+    reader.readAsDataURL(blob);
+  });
+  const data = await base64EncodedDataPromise;
+  return {
+    inlineData: {
+      data,
+      mimeType: blob.type,
+    },
+  };
 };
 
-const dataUrlToGenerativePart = async (dataUrl: string): Promise<{
-    inlineData: {
-        data: string;
-        mimeType: string;
+const fileToGenerativePart = async (file: File) => {
+  const base64EncodedDataPromise = new Promise<string>((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result.split(',')[1]);
+      } else {
+        resolve('');
+      }
     };
-}> => {
-    const response = await fetch(dataUrl);
-    const blob = await response.blob();
-    const file = new File([blob], 'image', { type: blob.type });
-    return fileToGenerativePart(file);
+    reader.readAsDataURL(file);
+  });
+  const data = await base64EncodedDataPromise;
+  return {
+    inlineData: {
+      data,
+      mimeType: file.type,
+    },
+  };
 };
 
 export const describeImage = async (imageFile: File): Promise<string> => {
     console.log('describeImage called with file:', imageFile.name, 'type:', imageFile.type, 'size:', imageFile.size);
     
     try {
-        // Use gemini-1.5-flash for image analysis (vision model)
-        const model = getAi().getGenerativeModel({ model: 'gemini-1.5-flash' });
-        console.log('Model created: gemini-1.5-flash');
-        
         const imagePart = await fileToGenerativePart(imageFile);
-        console.log('Image converted to part, mime type:', imagePart.inlineData.mimeType);
+        const textPart = { text: "Concisely describe the product in this image in 1-2 sentences. Your description will be used as context for an AI image generator. Focus on what the object is, its main features, and its color. Only output the description text." };
         
-        const prompt = "Concisely describe the product in this image in 1-2 sentences. Your description will be used as context for an AI image generator. Focus on what the object is, its main features, and its color. Only output the description text.";
-        
-        console.log('Calling generateContent...');
-        const result = await model.generateContent([imagePart, prompt]);
-        const response = await result.response;
-        const description = response.text().trim();
+        console.log('Calling generateContent with gemini-2.5-flash...');
+        const response = await getAi().models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: { parts: [imagePart, textPart] },
+        });
+
+        const description = response.text.trim();
         console.log('Description generated:', description);
         
         if (!description) {
-            throw new Error('Image description failed - empty response.');
+            throw new Error('Image description failed.');
         }
         return description;
     } catch (error: any) {
         console.error('Error in describeImage:', error);
         
-        // If the default image fails, provide a fallback description
-        if (error.message?.includes('Unable to process input image')) {
+        // Check if this is the default image - if so, return a default description
+        if (imageFile.size < 100) {
             console.log('Default image processing failed, using fallback description');
-            return 'A modern sleek product with clean design and professional appearance';
+            return "A professional product ready for marketing";
         }
         
-        throw new Error('Failed to describe image: ' + (error.message || 'Unknown error'));
+        throw error;
     }
 }
 
-export const generateAdMockup = async (imageFile: File, basePrompt: string, slogan: string, imageDescription: string): Promise<GeneratedAdResult> => {
-    console.log('Starting ad mockup generation with nano banana...');
-    console.log('Prompt:', basePrompt);
-    console.log('Description:', imageDescription);
-    console.log('Slogan:', slogan);
+export const generateAdMockup = async (imageFile: File, basePrompt: string, slogan: string = '', imageDescription: string = ''): Promise<GeneratedAdResult> => {
+  console.log('🚀 Starting ad mockup generation with gemini-2.5-flash-image-preview...');
+  console.log('📝 Prompt:', basePrompt);
+  console.log('📋 Description:', imageDescription);
+  console.log('💬 Slogan:', slogan);
+  
+  try {
+    const imagePart = await fileToGenerativePart(imageFile);
     
-    try {
-        // Use gemini-2.0-flash-exp with responseModalities for image generation
-        const model = getAi().getGenerativeModel({ 
-            model: 'gemini-2.0-flash-exp',
-            generationConfig: {
-                temperature: 1,
-                topP: 0.95,
-                topK: 40,
-                maxOutputTokens: 8192,
-                responseMimeType: 'text/plain'
-            }
-        });
-        
-        // For image generation, we need to use a text-only prompt
-        // The model will generate both text and image in response
-        const fullPrompt = `Generate an image of: ${basePrompt}
-
-Product context: ${imageDescription}
-${slogan ? `Include this text overlay in the image: "${slogan}"` : ''}
-
-Requirements:
-- Professional advertisement quality
-- Square 1:1 aspect ratio  
-- Modern, clean aesthetic
-- High-quality commercial photography style
-
-Create this advertisement image.`;
-
-        console.log('Attempting nano banana image generation with gemini-2.0-flash-exp...');
-        
-        // Try with responseModalities if the SDK supports it
-        const result = await model.generateContent({
-            contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
-            generationConfig: {
-                temperature: 1,
-                topP: 0.95,
-                topK: 40,
-                maxOutputTokens: 8192,
-                // This is where responseModalities would go if SDK supports it
-                // responseModalities: ['TEXT', 'IMAGE']
-            }
-        } as any);
-        
-        const response = await result.response;
-        
-        // Check if response contains image data
-        let imageUrl = '';
-        let textContent = '';
-        
-        if (response.candidates && response.candidates[0]) {
-            const candidate = response.candidates[0];
-            if (candidate.content && candidate.content.parts) {
-                for (const part of candidate.content.parts) {
-                    if (part.text) {
-                        textContent = part.text;
-                    }
-                    if (part.inlineData) {
-                        // Image data found!
-                        const base64ImageBytes = part.inlineData.data;
-                        imageUrl = `data:${part.inlineData.mimeType || 'image/png'};base64,${base64ImageBytes}`;
-                        console.log('✅ NANO BANANA IMAGE GENERATED!');
-                    }
-                }
-            }
-        }
-        
-        // If no image in response, try the text
-        if (!imageUrl && response.text) {
-            textContent = response.text();
-        }
-        
-        return {
-            imageUrl: imageUrl,
-            text: textContent || `Generated prompt for: ${basePrompt}`
-        };
-        
-    } catch (error: any) {
-        console.error('Nano banana generation failed:', error.message);
-        
-        // Try alternative model
-        try {
-            console.log('Trying gemini-2.5-flash-image-preview model...');
-            const model2 = getAi().getGenerativeModel({ 
-                model: 'gemini-2.5-flash-image-preview'
-            });
-            
-            const result = await model2.generateContent(fullPrompt);
-            const response = await result.response;
-            
-            return {
-                imageUrl: '',
-                text: response.text() || `Generated prompt for: ${basePrompt}`
-            };
-        } catch (error2: any) {
-            console.error('Alternative model also failed:', error2.message);
-        }
-        
-        // Final fallback
-        const fallbackPrompt = `Create a professional advertisement:
-Format: ${basePrompt}
-Product: ${imageDescription}
-${slogan ? `Text: "${slogan}"` : ''}
-Style: High-quality, modern, square aspect ratio`;
-        
-        return {
-            imageUrl: '',
-            text: fallbackPrompt
-        };
+    let sloganIntegrationPrompt = '';
+    if (slogan) {
+      sloganIntegrationPrompt = `Additionally, artfully and realistically integrate the following slogan into the scene: "${slogan}". The text should be seamlessly integrated, considering the image's composition, lighting, and style. Ensure the font, color, and placement are aesthetically pleasing and look like a professional advertisement.`;
     }
+
+    // Force AI to use the exact uploaded image
+    const imagePreservationPrompt = `
+    IMAGE USAGE REQUIREMENTS:
+    
+    1. Use the uploaded image exactly as provided in your output.
+    2. The uploaded image must be the primary subject of the final composition.
+    3. You may add background, context, text, or environment around it, but the original image must remain visible and unaltered.
+    4. Maintain all original visual elements from the uploaded image.
+    5. Think of this as placing the uploaded image into a scene or mockup.
+    
+    Context: "${imageDescription}"
+    `;
+
+    // Ensure professional output
+    const qualityNote = `IMPORTANT: Create a professional, high-quality mockup suitable for commercial use. Focus on clean, tasteful promotional material with excellent composition and lighting.`;
+
+    const fullPrompt = `${imagePreservationPrompt}
+    
+    Your creative task: ${basePrompt}
+    
+    Design Rules: ${DESIGN_RULES}
+    
+    ${sloganIntegrationPrompt}
+    
+    ${qualityNote}
+    
+    FINAL REQUIREMENTS:
+    - The uploaded image must be clearly visible in the final output
+    - Final output must be exactly square (1:1 aspect ratio)
+    - Only output the final modified image
+    `;
+
+    const textPart = { text: fullPrompt };
+
+    console.log('🎨 Generating image with gemini-2.5-flash-image-preview...');
+    console.log('📝 PROMPT DEBUG:', fullPrompt.substring(0, 200) + '...');
+    console.log('🖼️ IMAGE DEBUG: Image file provided as imagePart');
+    const response = await getAi().models.generateContent({
+      model: 'gemini-2.5-flash-image-preview',
+      contents: {
+        parts: [imagePart, textPart],
+      },
+      config: {
+        responseModalities: [Modality.IMAGE, Modality.TEXT],
+      },
+    });
+
+    if (response.promptFeedback?.blockReason) {
+      const reason = response.promptFeedback.blockReason;
+      if (reason === 'PROHIBITED_CONTENT') {
+        throw new Error('PROHIBITED_CONTENT: The AI safety filter was triggered. Try using a different image or simplifying the prompt.');
+      }
+      throw new Error(`SAFETY_FILTER: Request blocked due to ${reason}. Please try a different image or ad format.`);
+    }
+    if (!response.candidates || response.candidates.length === 0) {
+      throw new Error('SAFETY_FILTER: Image generation failed. The model returned no candidates, possibly due to safety filters. Try using a different image or ad format.');
+    }
+
+    let imageUrl: string | null = null;
+    const candidate = response.candidates[0];
+
+    if (candidate.content && candidate.content.parts) {
+        const imagePartFromResponse = candidate.content.parts.find(part => !!part.inlineData);
+        if (imagePartFromResponse?.inlineData) {
+          const base64ImageBytes: string = imagePartFromResponse.inlineData.data;
+          imageUrl = `data:${imagePartFromResponse.inlineData.mimeType};base64,${base64ImageBytes}`;
+        }
+    }
+
+    if (!imageUrl) {
+      const textResponse = response.text;
+      const finishReason = candidate.finishReason;
+      
+      let errorMessage = 'Image generation failed. The model did not return an image.';
+      if (finishReason && finishReason !== 'STOP') {
+          errorMessage += ` Reason: ${finishReason}.`;
+      }
+      if (textResponse) {
+          errorMessage += ` Model response: "${textResponse}"`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    console.log('✅ Image generation successful!');
+    return { imageUrl, text: response.text };
+    
+  } catch (error: any) {
+    console.error('❌ Ad generation failed:', error);
+    throw error;
+  }
 };
 
 export const generateSlogan = async (imageFile: File, sloganType: SloganType): Promise<string> => {
     try {
-        const model = getAi().getGenerativeModel({ model: 'gemini-1.5-flash' });
         const imagePart = await fileToGenerativePart(imageFile);
+        const basePrompt = getSloganPrompt(sloganType);
+        const textPart = { text: `${basePrompt} The output should be only the slogan text itself, without any quotation marks or extra explanations.` };
+
+        const response = await getAi().models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: { parts: [imagePart, textPart] },
+        });
         
-        let stylePrompt = '';
-        switch (sloganType) {
-            case 'hook':
-                stylePrompt = "Create a compelling hook that grabs attention and creates desire for this product. Make it punchy and memorable, between 5-10 words.";
-                break;
-            case 'meme':
-                stylePrompt = "Create a funny, meme-style caption for this product that would go viral on social media. Make it relatable and shareable, using internet humor.";
-                break;
-            case 'joke':
-                stylePrompt = "Create a clever, witty joke or pun about this product. Make it lighthearted and fun.";
-                break;
-            case 'quote':
-                stylePrompt = "Create an inspirational or thought-provoking quote that relates to this product and its benefits. Make it feel profound and shareable.";
-                break;
-            case 'tagline':
-                stylePrompt = "Create a professional brand tagline for this product. Make it concise, memorable, and communicate the core value proposition.";
-                break;
-            default:
-                stylePrompt = "Create a catchy tagline for this product.";
-        }
-        
-        const prompt = `${stylePrompt} Only output the slogan text itself, nothing else.`;
-        
-        const result = await model.generateContent([imagePart, prompt]);
-        const response = await result.response;
-        const slogan = response.text().trim();
-        
+        const slogan = response.text.trim();
         if (!slogan) {
-            throw new Error('Slogan generation failed.');
+            throw new Error('Slogan generation failed. The model did not return any text.');
         }
         
-        // Clean up any quotes or asterisks
-        return slogan.replace(/^["'*]+|["'*]+$/g, '').trim();
+        return slogan.replace(/^"|"$|^\*|\*$/g, '').trim();
     } catch (error: any) {
         console.error('Error in generateSlogan:', error);
-        throw new Error('Failed to generate slogan: ' + (error.message || 'Unknown error'));
+        throw error;
     }
-}
+};
 
-export const editImage = async (imageUrl: string, editPrompt: string): Promise<GeneratedAdResult> => {
-    console.log('Starting image editing with nano banana...');
+export const editImage = async (imageDataUrl: string, editPrompt: string): Promise<GeneratedAdResult> => {
+    console.log('Starting image editing with gemini-2.5-flash-image-preview...');
     
     try {
-        // Use gemini-2.0-flash-exp for image editing
-        const model = getAi().getGenerativeModel({ 
-            model: 'gemini-2.0-flash-exp',
-            generationConfig: {
-                temperature: 1,
-                topP: 0.95,
-                topK: 40,
-                maxOutputTokens: 8192
-            }
+        const imagePart = await dataUrlToGenerativePart(imageDataUrl);
+        const textPart = { text: `${editPrompt}. CRITICAL: Ensure the final output image is exactly square (1:1 aspect ratio).` };
+
+        const response = await getAi().models.generateContent({
+            model: 'gemini-2.5-flash-image-preview',
+            contents: {
+                parts: [imagePart, textPart],
+            },
+            config: {
+                responseModalities: [Modality.IMAGE, Modality.TEXT],
+            },
         });
         
-        const imagePart = await dataUrlToGenerativePart(imageUrl);
-        
-        const prompt = `Edit this image: ${editPrompt}
-Maintain square 1:1 aspect ratio and professional quality.`;
-        
-        const result = await model.generateContent([imagePart, prompt]);
-        const response = await result.response;
-        
-        // Check for image in response
-        let newImageUrl = imageUrl;
-        let textContent = '';
-        
-        if (response.candidates && response.candidates[0]) {
-            const candidate = response.candidates[0];
-            if (candidate.content && candidate.content.parts) {
-                for (const part of candidate.content.parts) {
-                    if (part.text) {
-                        textContent = part.text;
-                    }
-                    if (part.inlineData) {
-                        const base64ImageBytes = part.inlineData.data;
-                        newImageUrl = `data:${part.inlineData.mimeType || 'image/png'};base64,${base64ImageBytes}`;
-                        console.log('✅ Image edited with nano banana!');
-                    }
-                }
-            }
+        if (response.promptFeedback?.blockReason) {
+          throw new Error(`Request blocked due to ${response.promptFeedback.blockReason}.`);
+        }
+        if (!response.candidates || response.candidates.length === 0) {
+          throw new Error('Image editing failed. The model returned no candidates, possibly due to safety filters.');
+        }
+
+        let imageUrl: string | null = null;
+        const candidate = response.candidates[0];
+
+        if (candidate.content && candidate.content.parts) {
+          const imagePartFromResponse = candidate.content.parts.find(part => !!part.inlineData);
+          if (imagePartFromResponse?.inlineData) {
+              const base64ImageBytes: string = imagePartFromResponse.inlineData.data;
+              imageUrl = `data:${imagePartFromResponse.inlineData.mimeType};base64,${base64ImageBytes}`;
+              console.log('✅ Image edited successfully!');
+          }
         }
         
-        return {
-            imageUrl: newImageUrl,
-            text: textContent || editPrompt
-        };
-        
+        if (!imageUrl) {
+            const textResponse = response.text;
+            const finishReason = candidate.finishReason;
+            
+            let errorMessage = 'Image editing failed. The model did not return an image.';
+            if (finishReason && finishReason !== 'STOP') {
+                errorMessage += ` Reason: ${finishReason}.`;
+            }
+            if (textResponse) {
+                errorMessage += ` Model response: "${textResponse}"`;
+            }
+            throw new Error(errorMessage);
+        }
+
+        return { imageUrl, text: response.text };
     } catch (error: any) {
         console.error('Image editing failed:', error.message);
-        
-        // Fallback
-        return {
-            imageUrl: imageUrl,
-            text: `Edit instruction: ${editPrompt}`
-        };
+        throw error;
     }
-}
+};
 
-export const generateFacebookAdContent = async (format: AdFormat, productDescription: string): Promise<{
-    headline: string;
-    bodyText: string;
-    imagePrompt: string;
-}> => {
+export const generateFacebookAdContent = async (format: AdFormat, productDescription: string): Promise<FacebookAdContent> => {
     try {
-        const model = getAi().getGenerativeModel({ 
-            model: 'gemini-1.5-flash',
-            generationConfig: {
-                temperature: 0.9,
-                topP: 0.95,
-                topK: 40,
-                maxOutputTokens: 1024,
-            }
-        });
-        
-        const prompt = `Create Facebook ad content for: "${productDescription}"
-        
-Ad format: ${format.name}
+        const prompt = `
+            You are an expert direct response copywriter and AI art director. Your task is to create a complete Facebook ad based on a user's product and a selected ad format.
 
-Generate exactly this JSON structure (no markdown, just JSON):
-{
-  "headline": "Compelling headline max 40 chars",
-  "bodyText": "Engaging body text max 125 chars",
-  "imagePrompt": "Detailed image generation prompt"
-}`;
-        
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        let text = response.text();
-        
-        // Clean up response
-        text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-        
-        // Find JSON in response
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-            const parsed = JSON.parse(jsonMatch[0]);
-            return {
-                headline: parsed.headline || 'Discover Something Amazing',
-                bodyText: parsed.bodyText || 'Transform your experience today.',
-                imagePrompt: parsed.imagePrompt || format.prompt
-            };
-        }
-        
-        throw new Error('Invalid JSON response');
-    } catch (error) {
+            **Product Description:** "${productDescription}"
+
+            **Ad Format & Style:** "${format.name} - ${format.prompt}"
+
+            Based on the above, generate the following components for a compelling Facebook ad:
+            1.  **Headline:** A short, punchy headline (max 10 words) that grabs attention and summarizes the core message.
+            2.  **Body Text:** A persuasive body copy (2-4 sentences) that follows the principles of the selected ad format. It should be engaging and lead to a call to action.
+            3.  **Image Prompt:** A detailed, descriptive prompt for an AI image generator to create the ad creative. This prompt should describe a visually arresting, high-quality composition that complements the headline and body text. It must be a square 1:1 aspect ratio and look professional.
+
+            Your output MUST be a valid JSON object.
+        `;
+
+        const response = await getAi().models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        headline: { type: Type.STRING },
+                        bodyText: { type: Type.STRING },
+                        imagePrompt: { type: Type.STRING },
+                    },
+                    required: ["headline", "bodyText", "imagePrompt"],
+                },
+            },
+        });
+
+        const json = JSON.parse(response.text);
+        return json as FacebookAdContent;
+    } catch (error: any) {
         console.error('Error in generateFacebookAdContent:', error);
+        throw new Error("The AI failed to generate valid ad content. Please try again.");
+    }
+};
+
+export const analyzeProduct = async (imageFile: File, productTitle: string, productDescription: string): Promise<SmartProductAnalysis> => {
+    try {
+        const imagePart = await fileToGenerativePart(imageFile);
         
-        // Fallback content
+        const prompt = `Analyze this uploaded image carefully and provide smart marketing insights.
+
+FIRST, describe EXACTLY what you see in the image:
+- Visual style (is it digital art, photography, 3D render, illustration, logo, UI/UX design?)
+- Artistic elements (colors, composition, style, technique)
+- Subject matter (what is depicted or represented)
+- Any text or branding visible
+
+BASED ON YOUR VISUAL ANALYSIS, determine the most appropriate category:
+
+IMPORTANT INDUSTRY DETECTION RULES:
+- If the image shows digital art, illustrations, or creative designs → "entertainment" industry
+- If it's a logo or brand identity → match to the brand's actual industry
+- If it's UI/UX mockups or app screenshots → "saas" or "technology" 
+- If it shows physical products → match to product category
+- NEVER default to "technology" unless it's actual tech hardware or software UI
+
+1. What industry/category this belongs to (be specific about creative content)
+2. Who the target audiences should be (for art/creative: artists_designers, creative_professionals, content_creators)
+3. Natural environments where this product would realistically be placed or used (be specific about physical locations)
+4. A brief, factual description of the actual visual content
+5. Your confidence level (0-100)
+
+CRITICAL: For naturalEnvironments, provide SPECIFIC PHYSICAL LOCATIONS where this product would actually be used or displayed:
+- For apps/software: "modern office desk", "coffee shop workspace", "home office", "co-working space"
+- For physical products: "kitchen counter", "living room table", "outdoor patio", "bedroom nightstand"
+- For fashion items: "urban street corner", "rooftop terrace", "beach boardwalk", "city park"
+- For art/creative: "art studio easel", "gallery wall", "designer's desk", "creative loft space"
+
+Return a valid JSON object with this structure:
+{
+  "suggestedTitle": "accurate title - for art use: 'Digital Art Creation' or similar",
+  "detectedIndustry": "one of: saas, ecommerce, fashion, food_beverage, fitness_wellness, technology, b2b_services, automotive, real_estate, education, healthcare, finance, entertainment, travel, home_garden",
+  "recommendedAudiences": ["array of up to 4 - MUST include creative_professionals, artists_designers for any artistic content"],
+  "naturalEnvironments": ["array of 4-6 SPECIFIC PHYSICAL LOCATIONS like 'modern office desk', 'coffee shop table', 'kitchen counter', 'rooftop terrace'"],
+  "userStory": "A factual description of the visual elements, style, and artistic technique visible in the image",
+  "confidence": 85
+}`;
+
+        const response = await getAi().models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: { parts: [imagePart, { text: prompt }] },
+            config: {
+                responseMimeType: "application/json",
+            },
+        });
+
+        const analysis = JSON.parse(response.text);
+        return analysis as SmartProductAnalysis;
+    } catch (error: any) {
+        console.error('Product analysis failed:', error);
+        // Return a default analysis
         return {
-            headline: 'Discover Something Amazing',
-            bodyText: 'Transform your experience today with our innovative solution.',
-            imagePrompt: `Create a Facebook ad image for ${productDescription} in ${format.name} style`
+            productType: 'software_app' as ProductType,
+            suggestedTitle: productTitle,
+            detectedIndustry: 'technology' as Industry,
+            recommendedAudiences: ['entrepreneurs', 'tech_savvy'] as TargetAudience[],
+            naturalEnvironments: ['modern office', 'coffee shop', 'home desk'],
+            avoidFormats: [],
+            userStory: 'This product helps busy professionals work more efficiently and achieve their goals faster.',
+            confidence: 50
         };
     }
 };
+
+const getSloganPrompt = (sloganType: SloganType): string => {
+    switch (sloganType) {
+        case 'hook':
+            return "Analyze this product image. Brainstorm a short, witty, and modern marketing hook for it. It should be a scroll-stopper, clever, and feel more like a funny observation than a traditional ad tagline. Aim for a casual, conversational tone.";
+        case 'meme':
+            return "Analyze this product image. Come up with a short, funny meme caption for it. It should be in the style of a popular internet meme. Keep it concise and relatable.";
+        case 'joke':
+            return "Analyze this product image. Tell a short, clever one-liner joke related to the product or what it does. The joke should be lighthearted and safe for a general audience.";
+        case 'quote':
+            return "Analyze this product image. Generate a short, inspiring or thought-provoking quote that relates to the feeling or purpose of this product. Make it sound profound but keep it brief.";
+        case 'fun_fact':
+             return "Analyze this product image. Come up with a surprising and fun fact that is tangentially related to the product, its category, or its use case. Keep it short and interesting.";
+        case 'tagline':
+            return "Generate a short, professional, and catchy tagline for this product. Suitable for a corporate or business context."
+        default:
+            return "Generate a short, catchy tagline for this product.";
+    }
+}

@@ -181,7 +181,16 @@ export const SmartProductInput: React.FC<SmartProductInputProps> = ({
                 <div className="flex justify-between items-center mb-2">
                     <label className="block text-sm font-medium text-gray-700">Product Description</label>
                     <button
-                        onClick={onGenerateDescription}
+                        onClick={() => {
+                            console.log('🔵 CRITICAL: Generate Description button clicked!');
+                            console.log('📄 Component state:', {
+                                isDescriptionLoading,
+                                isLoading,
+                                inputTitle: input.title,
+                                inputDescription: input.description
+                            });
+                            onGenerateDescription();
+                        }}
                         disabled={isDescriptionLoading || isLoading}
                         className="btn-secondary-action text-xs"
                     >

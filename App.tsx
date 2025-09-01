@@ -224,6 +224,9 @@ export const App: React.FC = () => {
     }, [selectedImage, handleGenerateDescription]);
 
     const handleGenerate = useCallback(async (overrideFormatOrEnvironment?: AdFormat | string | AdFormat[]) => {
+        console.log('🔥 HANDLEGENERATE ENTRY: Function called!');
+        console.log('🔍 Entry params:', { overrideFormatOrEnvironment, selectedImage: !!selectedImage, loadingState });
+        
         // Check if we received multiple formats for batch generation
         if (Array.isArray(overrideFormatOrEnvironment)) {
             console.log('🎯 Multi-format generation requested for', overrideFormatOrEnvironment.length, 'formats');
@@ -912,12 +915,14 @@ export const App: React.FC = () => {
                 />
                 <div className="flex-grow px-6 py-6">
                     <div className="flex-1 min-w-0">
-                        {/* Generation Progress */}
-                        <GenerationProgress 
-                            loadingState={loadingState}
-                            isNaturalEnvironment={isNaturalEnvironmentSelected}
-                            selectedFormatName={selectedFormat?.name}
-                        />
+                        {/* Generation Progress - only show when not using full-screen loader */}
+                        {loadingState !== 'generating_image' && loadingState !== 'generating_text' && (
+                            <GenerationProgress 
+                                loadingState={loadingState}
+                                isNaturalEnvironment={isNaturalEnvironmentSelected}
+                                selectedFormatName={selectedFormat?.name}
+                            />
+                        )}
                         
                         <Workspace
                             loadingState={loadingState}
@@ -970,24 +975,31 @@ export const App: React.FC = () => {
                     console.log('🔍 smartInput.analysis:', smartInput.analysis);
                     console.log('🌿 naturalEnvironments:', smartInput.analysis?.naturalEnvironments);
                     console.log('📸 selectedImage:', selectedImage ? selectedImage.file.name : 'NULL');
-                    console.log('🎯 currentState:', currentState);
                     
                     // Select the first Natural Environment option and generate
                     if (smartInput.analysis?.naturalEnvironments && smartInput.analysis.naturalEnvironments.length > 0) {
                         const firstEnvironment = smartInput.analysis.naturalEnvironments[0];
                         console.log('🎨 Selected environment:', firstEnvironment);
                         
-                        setCurrentState({
-                            ...currentState,
-                            selectedFormat: firstEnvironment.text,
-                            selectedPrompt: firstEnvironment.text,
-                            selectedEnvironment: firstEnvironment.text,
-                            isNaturalEnvironment: true
+                        // Set the format to natural environment (auto-generation)
+                        const naturalFormat = getNaturalEnvironmentFormat();
+                        setSelectedFormat(naturalFormat);
+                        setIsNaturalEnvironmentSelected(true);
+                        
+                        console.log('🚀 About to call handleGenerate with natural environment...');
+                        console.log('📊 Current state before handleGenerate:', {
+                            selectedFormat: naturalFormat,
+                            isNaturalEnvironmentSelected: true,
+                            loadingState,
+                            selectedImage: selectedImage?.file.name,
+                            smartAnalysis: !!smartInput.analysis
                         });
                         
-                        console.log('🚀 Calling handleGenerate...');
-                        // Trigger generation with the first environment
-                        handleGenerate();
+                        // Add a small delay to ensure state updates are applied
+                        setTimeout(() => {
+                            console.log('🎬 Executing handleGenerate NOW...');
+                            handleGenerate();
+                        }, 100);
                     } else {
                         console.log('❌ No natural environments found!');
                     }

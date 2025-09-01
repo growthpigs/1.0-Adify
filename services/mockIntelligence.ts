@@ -6,8 +6,7 @@ export const generateMockAnalysis = async (
     imageFile: File, 
     currentDescription: string = ''
 ): Promise<SmartProductAnalysis> => {
-    // Simulate AI processing time
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Removed artificial delay - natural processing time is sufficient
     
     // Mock intelligent analysis based on filename and description clues
     const fileName = imageFile.name.toLowerCase();

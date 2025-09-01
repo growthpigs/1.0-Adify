@@ -46,7 +46,7 @@ const LoadingIndicator: React.FC<{ state: LoadingState }> = ({ state }) => {
         <div className="relative w-32 h-32 mb-6">
           {/* Banana Loading GIF */}
           <img 
-            src="/banana-loading.gif" 
+            src="/banana-loading-trimmed.gif" 
             alt="Loading..." 
             className="w-full h-full object-contain"
           />
@@ -99,7 +99,7 @@ const InitialState: React.FC<{ onImageUpload: (file: File, previewUrl: string) =
   };
 
   return (
-    <div className="flex flex-col items-center justify-center text-center h-full">
+    <div className="flex flex-col items-center justify-start text-center h-full" style={{paddingTop: '200px'}}>
         <input
           type="file"
           id="workspace-file-upload"
@@ -165,7 +165,10 @@ export const Workspace: React.FC<WorkspaceProps> = (props) => {
   };
 
   const renderContent = () => {
-    if (loadingState !== 'idle') return <LoadingIndicator state={loadingState} />;
+    // Don't show workspace loading indicator when full-screen popup loader is active
+    if (loadingState !== 'idle' && loadingState !== 'generating_image' && loadingState !== 'generating_text') {
+      return <LoadingIndicator state={loadingState} />;
+    }
     if (error) return <ErrorState error={error} />;
     if (generatedContent) {
         if ('headline' in generatedContent) { // It's a FacebookAdContent
@@ -176,6 +179,7 @@ export const Workspace: React.FC<WorkspaceProps> = (props) => {
                     src={generatedContent.imageUrl} 
                     alt="Generated ad mockup" 
                     className={`w-full h-full object-contain ${isRepositionMode ? 'cursor-crosshair' : ''}`}
+                    style={{border: '2px solid #d1d5db'}}
                     onClick={handleImageClick}
                 />
             );
@@ -188,14 +192,18 @@ export const Workspace: React.FC<WorkspaceProps> = (props) => {
   return (
     <div className="flex flex-col w-full h-full">
         {/* Main Content Area */}
-        <div className="flex-grow flex items-start justify-start p-6" style={{ paddingTop: '170px', paddingLeft: '25px' }}>
+        <div className="flex-grow flex items-start justify-start p-6" style={{ paddingTop: '8px', paddingLeft: '8px' }}>
             <div className="w-full h-full max-w-2xl">
                 {renderContent()}
             </div>
         </div>
         
         {isContentGenerated && (
-             <EditingTools {...props} />
+            <div className="flex items-start justify-start p-6" style={{ paddingTop: '0px', paddingLeft: '8px' }}>
+                <div className="w-full max-w-2xl">
+                    <EditingTools {...props} />
+                </div>
+            </div>
         )}
     </div>
   );

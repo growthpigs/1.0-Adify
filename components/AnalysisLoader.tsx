@@ -2,7 +2,7 @@ import React from 'react';
 
 export const AnalysisLoader: React.FC = () => {
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 flex items-center justify-center z-50" style={{backgroundColor: 'rgba(0, 0, 0, 0.5)'}}>
             <div className="rounded-lg p-8 max-w-sm w-full mx-4 text-center" style={{ backgroundColor: '#FAC625' }}>
                 {/* Banana Loading GIF - 40% smaller */}
                 <div className="relative mb-6" style={{ marginTop: '20px' }}>

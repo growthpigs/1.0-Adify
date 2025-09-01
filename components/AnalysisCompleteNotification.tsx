@@ -15,7 +15,7 @@ export const AnalysisCompleteNotification: React.FC<AnalysisCompleteNotification
     if (!isVisible) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 flex items-center justify-center z-50" style={{backgroundColor: 'rgba(0, 0, 0, 0.5)'}}>
             <div className="bg-white rounded-lg p-8 max-w-2xl mx-4 relative">
                 <button
                     onClick={onClose}
@@ -47,17 +47,21 @@ export const AnalysisCompleteNotification: React.FC<AnalysisCompleteNotification
                 </div>
                 
                 <div className="flex items-center gap-6">
-                    {/* Manual Setup Option */}
+                    {/* Customize Option */}
                     <div className="flex-1">
-                        <div className="bg-gray-50 rounded-lg p-5 h-full">
-                            <h4 className="font-medium text-gray-900 mb-3">Manual Setup</h4>
-                            <p className="text-sm text-gray-600 mb-3">Customize every detail</p>
-                            <ul className="space-y-2 text-sm text-gray-500">
-                                <li>• Choose your preferred environment</li>
-                                <li>• Add optional text style</li>
-                                <li>• Fine-tune your ad</li>
-                            </ul>
-                            <p className="text-xs text-gray-500 mt-4">Use the left panel to configure</p>
+                        <div className="bg-green-50 rounded-lg p-5 border border-green-200 flex flex-col justify-between min-h-[258px]" style={{marginTop: '6px'}}>
+                            <div>
+                                <h4 className="font-semibold text-gray-900 mb-4 text-lg">Customize</h4>
+                                <p className="text-base text-gray-700 mb-6 leading-relaxed">
+                                    Take control and customize every detail to create the perfect ad for your vision.
+                                </p>
+                            </div>
+                            <button
+                                onClick={onClose}
+                                className="w-full bg-green-400 hover:bg-green-500 text-gray-900 font-medium py-2.5 px-4 rounded-lg transition-colors mt-auto"
+                            >
+                                Customize Settings
+                            </button>
                         </div>
                     </div>
                     
@@ -70,19 +74,29 @@ export const AnalysisCompleteNotification: React.FC<AnalysisCompleteNotification
                     
                     {/* Quick Start Option */}
                     <div className="flex-1">
-                        <div className="bg-yellow-50 rounded-lg p-5 h-full border border-yellow-200">
-                            <h4 className="font-semibold text-gray-900 mb-4 text-lg">Go Bananas!</h4>
-                            <p className="text-base text-gray-700 mb-6 leading-relaxed">
-                                Skip the setup and get an instant image! We'll automatically pick the perfect natural habitat for your product.
-                            </p>
+                        <div className="bg-yellow-50 rounded-lg p-5 border border-yellow-200 flex flex-col justify-between min-h-[200px]">
+                            <div>
+                                <h4 className="font-semibold text-gray-900 mb-4 text-lg">Go Bananas!</h4>
+                                <p className="text-base text-gray-700 mb-6 leading-relaxed">
+                                    Skip the setup and get an instant image! We'll automatically pick the perfect natural habitat for your product.
+                                </p>
+                            </div>
                             <button
                                 onClick={() => {
+                                    console.log('🎯 BUTTON CLICKED: I\'m Feeling Lucky button clicked!');
+                                    console.log('🔍 onFeelingLucky exists:', !!onFeelingLucky);
+                                    
                                     if (onFeelingLucky) {
+                                        console.log('🚀 CALLING onFeelingLucky...');
                                         onFeelingLucky();
+                                        console.log('✅ onFeelingLucky completed, now calling onClose...');
+                                    } else {
+                                        console.log('❌ onFeelingLucky is missing!');
                                     }
                                     onClose();
+                                    console.log('🔚 onClose completed');
                                 }}
-                                className="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-medium py-2.5 px-4 rounded-lg transition-colors"
+                                className="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-medium py-2.5 px-4 rounded-lg transition-colors mt-auto"
                             >
                                 I'm Feeling Lucky
                             </button>

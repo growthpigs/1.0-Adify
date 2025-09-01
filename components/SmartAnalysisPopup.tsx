@@ -236,7 +236,7 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
     const availableAudiences = getAvailableAudiences();
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{backgroundColor: 'rgba(0, 0, 0, 0.5)'}}>
             <div ref={popupRef} className="bg-white rounded-xl shadow-xl w-[600px] h-[75vh] max-h-[85vh] flex flex-col overflow-hidden">
                 {/* Compact Header */}
                 <div className="p-3 border-b border-gray-200 bg-gray-50">

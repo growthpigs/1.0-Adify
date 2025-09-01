@@ -17,7 +17,7 @@ const AutoBananaLogotype: React.FC<{ className?: string }> = ({ className = "h-6
 );
 
 export const Footer: React.FC = () => (
-  <footer className="mt-auto" style={{ marginTop: '100px', backgroundColor: '#FEF3C7' }}>
+  <footer className="mt-auto" style={{ marginTop: '100px', backgroundColor: 'rgba(254, 243, 199, 0.8)' }}>
     <div className="py-6" style={{ paddingLeft: '20px', paddingRight: '20px' }}>
       <div className="flex justify-between items-center">
         {/* Left side - Subtle logo - matching About/Privacy text color */}
@@ -25,13 +25,13 @@ export const Footer: React.FC = () => (
         
         {/* Right side - Links and copyright */}
         <div className="flex items-center gap-8">
-          <div className="flex gap-6 text-sm" style={{ color: '#F9DA82' }}>
+          <div className="flex gap-6 text-sm" style={{ color: '#D68C5F' }}>
             <a href="#" className="hover:opacity-80 transition-opacity">About</a>
             <a href="#" className="hover:opacity-80 transition-opacity">Privacy</a>
             <a href="#" className="hover:opacity-80 transition-opacity">Terms</a>
             <a href="#" className="hover:opacity-80 transition-opacity">Contact</a>
           </div>
-          <p className="text-sm" style={{ color: '#F9DA82' }}>
+          <p className="text-sm" style={{ color: '#D68C5F' }}>
             © 2025 AutoBanana. All rights reserved.
           </p>
         </div>

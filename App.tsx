@@ -965,6 +965,21 @@ export const App: React.FC = () => {
             <AnalysisCompleteNotification
                 isVisible={showAnalysisPopup && !!smartInput.analysis}
                 onClose={() => setShowAnalysisPopup(false)}
+                onFeelingLucky={() => {
+                    // Select the first Natural Environment option and generate
+                    if (smartInput.analysis?.naturalEnvironments && smartInput.analysis.naturalEnvironments.length > 0) {
+                        const firstEnvironment = smartInput.analysis.naturalEnvironments[0];
+                        setCurrentState({
+                            ...currentState,
+                            selectedFormat: firstEnvironment.text,
+                            selectedPrompt: firstEnvironment.text,
+                            selectedEnvironment: firstEnvironment.text,
+                            isNaturalEnvironment: true
+                        });
+                        // Trigger generation with the first environment
+                        handleGenerate();
+                    }
+                }}
             />
             <Toaster 
                 position="top-right"

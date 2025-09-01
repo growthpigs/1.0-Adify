@@ -42,47 +42,14 @@ const LoadingIndicator: React.FC<{ state: LoadingState }> = ({ state }) => {
         'idle': 'Warming up the banana stand...',
     };
     return (
-      <div className="flex flex-col items-center justify-center w-full h-full text-center bg-white rounded-lg">
+      <div className="flex flex-col items-center justify-center w-full h-full text-center rounded-lg">
         <div className="relative w-32 h-32 mb-6">
-          {/* Banana SVG with peeling animation */}
-          <svg className="w-full h-full animate-bounce" viewBox="0 0 100 100">
-            {/* Banana body */}
-            <path 
-              d="M30 50 Q20 30, 40 25 T70 30 Q80 40, 75 55 T60 70 Q45 75, 30 65 Z"
-              fill="#FFD700"
-              stroke="#FFA500"
-              strokeWidth="2"
-            />
-            {/* Peeling parts */}
-            <path 
-              d="M40 25 Q35 15, 45 20"
-              fill="#FFF8DC"
-              stroke="#FFA500"
-              strokeWidth="1.5"
-              className="animate-pulse origin-bottom"
-              style={{ animation: 'peel 2s ease-in-out infinite' }}
-            />
-            <path 
-              d="M55 28 Q50 18, 60 23"
-              fill="#FFF8DC"
-              stroke="#FFA500"
-              strokeWidth="1.5"
-              className="animate-pulse origin-bottom"
-              style={{ animation: 'peel 2s ease-in-out infinite 0.3s' }}
-            />
-            <path 
-              d="M65 32 Q60 22, 70 27"
-              fill="#FFF8DC"
-              stroke="#FFA500"
-              strokeWidth="1.5"
-              className="animate-pulse origin-bottom"
-              style={{ animation: 'peel 2s ease-in-out infinite 0.6s' }}
-            />
-            {/* Banana spots */}
-            <circle cx="45" cy="45" r="2" fill="#8B4513" opacity="0.3" />
-            <circle cx="55" cy="50" r="1.5" fill="#8B4513" opacity="0.3" />
-            <circle cx="50" cy="58" r="1.8" fill="#8B4513" opacity="0.3" />
-          </svg>
+          {/* Banana Loading GIF */}
+          <img 
+            src="/banana-loading.gif" 
+            alt="Loading..." 
+            className="w-full h-full object-contain"
+          />
         </div>
         <h3 className="text-2xl font-semibold text-yellow-600 mb-2">{messages[state]}</h3>
         <p className="text-lg text-gray-600">Just a split second more...</p>

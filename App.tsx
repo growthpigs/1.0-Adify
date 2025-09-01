@@ -132,18 +132,30 @@ export const App: React.FC = () => {
             console.log('🧠 Starting automatic smart analysis...');
             setIsAnalyzing(true);
             
-            // Trigger smart analysis with default values
+            // First, generate a real description of the product
+            console.log('📝 Generating product description...');
+            let productDescription = '';
+            try {
+                productDescription = await describeImage(newImage.file);
+                console.log('✅ Description generated:', productDescription);
+                setImageDescription(productDescription); // Update the state with real description
+            } catch (descError) {
+                console.error('Description generation failed, using fallback:', descError);
+                productDescription = 'Professional product for your marketing needs';
+            }
+            
+            // Trigger smart analysis with the real description
             const analysisResult = await analyzeProduct(
                 newImage.file, 
                 'Product', // Default title
-                'AI-powered product analysis' // Default description
+                productDescription // Use the actual generated description
             );
             console.log('📊 Analysis result:', analysisResult);
             
             // Update the image with analysis results and smart input
             const analysisSmartInput: SmartProductInput = {
                 title: analysisResult.suggestedTitle,
-                description: 'AI-powered product analysis',
+                description: productDescription, // Use the real description here too
                 industry: analysisResult.detectedIndustry,
                 targetAudience: analysisResult.recommendedAudiences?.[0] || null,
                 analysis: analysisResult,

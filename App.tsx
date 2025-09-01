@@ -15,6 +15,7 @@ import { AnalysisLoader } from './components/AnalysisLoader';
 import { GenerationLoader } from './components/GenerationLoader';
 import { GenerationProgress } from './components/GenerationProgress';
 import { AppSkeleton } from './components/SkeletonLoader';
+import { ProductionStatusPanel } from './components/ProductionStatusPanel';
 
 export type LoadingState = 'idle' | 'describing' | 'generating_text' | 'generating_image' | 'editing';
 
@@ -58,6 +59,11 @@ export const App: React.FC = () => {
     const [isNaturalEnvironmentSelected, setIsNaturalEnvironmentSelected] = useState(false);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [selectedFormatsForGeneration, setSelectedFormatsForGeneration] = useState<AdFormat[]>([]);
+    const [currentGenerationQueue, setCurrentGenerationQueue] = useState<{
+        formats: AdFormat[];
+        currentIndex: number;
+        results: GeneratedContent[];
+    } | null>(null);
     
     const generatedContent = history[currentHistoryIndex] ?? null;
     const isContentGenerated = generatedContent !== null;
@@ -216,7 +222,13 @@ export const App: React.FC = () => {
         }
     }, [selectedImage, handleGenerateDescription]);
 
-    const handleGenerate = useCallback(async (overrideFormatOrEnvironment?: AdFormat | string) => {
+    const handleGenerate = useCallback(async (overrideFormatOrEnvironment?: AdFormat | string | AdFormat[]) => {
+        // Check if we received multiple formats for batch generation
+        if (Array.isArray(overrideFormatOrEnvironment)) {
+            console.log('🎯 Multi-format generation requested for', overrideFormatOrEnvironment.length, 'formats');
+            return handleMultiFormatGeneration(overrideFormatOrEnvironment);
+        }
+        
         // Determine if we got a format or an environment string
         let overrideFormat: AdFormat | undefined;
         let selectedEnvironment: string | undefined;
@@ -446,8 +458,10 @@ export const App: React.FC = () => {
     }, [lastGenerationParams]);
     
     const handleRegenerateText = useCallback(async () => {
-        if (!lastGenerationParams || !lastGenerationParams.sloganType || !generatedContent) return;
-        const { format, sloganType, description, selectedImage } = lastGenerationParams;
+        if (!lastGenerationParams || !generatedContent) return;
+        const { format, description, selectedImage } = lastGenerationParams;
+        // Use existing sloganType or default to 'hook' for Natural Environment generations
+        const sloganType = lastGenerationParams.sloganType || 'hook';
 
         setError(null);
         setLoadingState('generating_text');
@@ -474,6 +488,103 @@ export const App: React.FC = () => {
         // Regenerate with the same parameters
         await handleGenerate();
     }, [lastGenerationParams, handleGenerate]);
+
+    // Multi-format generation handler
+    const handleMultiFormatGeneration = useCallback(async (formats: AdFormat[]) => {
+        console.log('🎯 Starting multi-format generation for', formats.length, 'formats');
+        
+        if (!selectedImage) {
+            toast.error('Please upload an image first');
+            return;
+        }
+        
+        if (formats.length === 0) {
+            toast.error('Please select at least one format');
+            return;
+        }
+        
+        // Set up generation queue
+        setCurrentGenerationQueue({
+            formats,
+            currentIndex: 0,
+            results: []
+        });
+        
+        setSelectedFormatsForGeneration(formats);
+        
+        // Generate first format
+        if (formats.length === 1) {
+            // Single format - use existing logic
+            await handleGenerate(formats[0]);
+            return;
+        }
+        
+        // Multiple formats - show progress and generate sequentially
+        toast.success(`Starting generation of ${formats.length} ad formats...`);
+        
+        try {
+            const results: GeneratedContent[] = [];
+            
+            for (let i = 0; i < formats.length; i++) {
+                const format = formats[i];
+                console.log(`🎨 Generating format ${i + 1}/${formats.length}: ${format.name}`);
+                
+                // Update progress
+                setCurrentGenerationQueue(prev => prev ? {
+                    ...prev,
+                    currentIndex: i
+                } : null);
+                
+                setLoadingState('generating_image');
+                
+                try {
+                    // Use smart input description if available
+                    const description = smartInput.description || imageDescription;
+                    
+                    let slogan = '';
+                    if (selectedSloganType) {
+                        setLoadingState('generating_text');
+                        slogan = await generateSlogan(selectedImage.file, selectedSloganType);
+                    }
+                    
+                    setLoadingState('generating_image');
+                    const result = await generateAdMockup(selectedImage.file, format.prompt, slogan, description);
+                    
+                    if (result.imageUrl) {
+                        const content: MockupContent = {
+                            imageUrl: result.imageUrl,
+                            slogan,
+                            format: format.name
+                        };
+                        results.push(content);
+                        
+                        // Add to session gallery
+                        setSessionGallery(prev => [content, ...prev].slice(0, 16));
+                        
+                        console.log(`✅ Generated ${format.name} successfully`);
+                    }
+                } catch (error: any) {
+                    console.error(`❌ Failed to generate ${format.name}:`, error);
+                    toast.error(`Failed to generate ${format.name}: ${error.message}`);
+                }
+            }
+            
+            // Show the last generated result
+            if (results.length > 0) {
+                updateHistory(results[results.length - 1]);
+                toast.success(`✅ Generated ${results.length} of ${formats.length} ad formats!`);
+            } else {
+                toast.error('Failed to generate any ad formats');
+            }
+            
+        } catch (error: any) {
+            console.error('❌ Multi-format generation failed:', error);
+            toast.error('Multi-format generation failed');
+        } finally {
+            setLoadingState('idle');
+            setCurrentGenerationQueue(null);
+        }
+    }, [selectedImage, imageDescription, smartInput, selectedSloganType, handleGenerate]);
 
     const handleFacebookAdTextChange = (newContent: Partial<FacebookAdContent>) => {
         if (generatedContent && 'headline' in generatedContent) {
@@ -640,6 +751,7 @@ export const App: React.FC = () => {
             <main className="flex-grow flex">
                 <Sidebar
                     imageLibrary={uploadedImages}
+                    generatedGallery={sessionGallery}
                     selectedImage={selectedImage}
                     onSelectFromLibrary={handleSelectFromLibrary}
                     onDeleteFromLibrary={handleDeleteFromLibrary}
@@ -695,6 +807,13 @@ export const App: React.FC = () => {
             {/* Loading Indicators */}
             {isAnalyzing && <AnalysisLoader />}
             {(loadingState === 'generating_image' || loadingState === 'generating_text') && <GenerationLoader />}
+            
+            {/* Production Status Panel for Multi-Format Generation */}
+            <ProductionStatusPanel 
+                currentGenerationQueue={currentGenerationQueue}
+                loadingState={loadingState}
+                isVisible={!!currentGenerationQueue}
+            />
             
             {/* Smart Analysis Popup */}
             <AnalysisCompleteNotification

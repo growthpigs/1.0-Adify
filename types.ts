@@ -16,6 +16,7 @@ export interface GeneratedAdResult {
 export interface MockupContent {
     imageUrl: string;
     slogan: string;
+    format?: string;
 }
 
 export interface FacebookAdContent {

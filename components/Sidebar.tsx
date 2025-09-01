@@ -6,10 +6,11 @@ import { FormatSelectionGrid } from './FormatSelectionGrid';
 
 interface SidebarProps {
   imageLibrary: UploadedImage[];
+  generatedGallery: any[]; // Generated content gallery
   selectedImage: UploadedImage;
   onSelectFromLibrary: (image: UploadedImage) => void;
   onDeleteFromLibrary: (imageId: string) => void;
-  onGenerate: (environment?: string) => void;
+  onGenerate: (environmentOrFormats?: string | AdFormat[]) => void;
   isLoading: boolean;
   smartInput: SmartProductInput;
   onSmartInputChange: (input: SmartProductInput) => void;
@@ -32,9 +33,11 @@ const DescriptionLoader: React.FC = () => (
 );
 
 type TabType = 'analysis' | 'mockups' | 'social' | 'facebook';
+type LibraryTabType = 'uploaded' | 'generated';
 
 export const Sidebar: React.FC<SidebarProps> = ({
   imageLibrary,
+  generatedGallery,
   selectedImage,
   onSelectFromLibrary,
   onDeleteFromLibrary,
@@ -50,6 +53,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onResetAnalysis,
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('analysis');
+  const [libraryTab, setLibraryTab] = useState<LibraryTabType>('uploaded');
   const [selectedFormats, setSelectedFormats] = useState<AdFormat[]>([]);
   const [selectedEnvironment, setSelectedEnvironment] = useState<string | null>(null);
   
@@ -119,24 +123,50 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <aside className="w-[600px] xl:w-[600px] lg:w-[500px] md:w-[400px] sm:w-[350px] flex-shrink-0 bg-white border-r border-gray-200 flex flex-col overflow-y-auto">
       {/* Image Library */}
       <div className="p-4 border-b border-gray-200">
-        <h3 className="section-header">Image Library</h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="section-header">Image Library</h3>
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setLibraryTab('uploaded')}
+              className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                libraryTab === 'uploaded'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Library
+            </button>
+            <button
+              onClick={() => setLibraryTab('generated')}
+              className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                libraryTab === 'generated'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Generated ({generatedGallery.length})
+            </button>
+          </div>
+        </div>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-          <label 
-            htmlFor="sidebar-file-upload"
-            className="w-14 h-14 flex-shrink-0 bg-gray-50 rounded-lg flex items-center justify-center cursor-pointer border-2 border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-100 transition-colors"
-            aria-label="Upload new image"
-          >
-            <PlusIcon className="w-5 h-5 text-gray-400" />
-            <input
-              id="sidebar-file-upload"
-              type="file"
-              onChange={handleFileChange}
-              className="hidden"
-              accept="image/png, image/jpeg, image/webp"
-              disabled={isLoading}
-            />
-          </label>
-          {imageLibrary.map(image => (
+          {libraryTab === 'uploaded' && (
+            <>
+              <label 
+                htmlFor="sidebar-file-upload"
+                className="w-14 h-14 flex-shrink-0 bg-gray-50 rounded-lg flex items-center justify-center cursor-pointer border-2 border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-100 transition-colors"
+                aria-label="Upload new image"
+              >
+                <PlusIcon className="w-5 h-5 text-gray-400" />
+                <input
+                  id="sidebar-file-upload"
+                  type="file"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  accept="image/png, image/jpeg, image/webp"
+                  disabled={isLoading}
+                />
+              </label>
+              {imageLibrary.map(image => (
             <div key={image.id} className="relative group flex-shrink-0">
               <button 
                 onClick={() => onSelectFromLibrary(image)}
@@ -160,7 +190,44 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <XIcon className="w-3 h-3" />
               </button>
             </div>
-          ))}
+              ))}
+            </>
+          )}
+          
+          {libraryTab === 'generated' && (
+            <>
+              {generatedGallery.length === 0 ? (
+                <div className="flex-1 flex items-center justify-center py-8 text-center">
+                  <div className="text-gray-400">
+                    <div className="w-12 h-12 mx-auto mb-2 rounded-lg bg-gray-100 flex items-center justify-center">
+                      🎨
+                    </div>
+                    <p className="text-sm">No ads generated yet</p>
+                    <p className="text-xs text-gray-500 mt-1">Generated ads will appear here</p>
+                  </div>
+                </div>
+              ) : (
+                generatedGallery.map((content, index) => (
+                  <div key={`generated-${index}`} className="relative group flex-shrink-0">
+                    <div className="w-14 h-14 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-gray-300 bg-white">
+                      <img 
+                        src={content.imageUrl} 
+                        alt="Generated ad" 
+                        className="w-full h-full object-cover" 
+                      />
+                    </div>
+                    {content.format && (
+                      <div className="absolute -bottom-1 -right-1 bg-pink-500 text-white text-xs px-1 py-0.5 rounded text-center min-w-0">
+                        <div className="truncate max-w-8" title={content.format}>
+                          {content.format.split(' ')[0]}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </>
+          )}
         </div>
       </div>
 
@@ -317,15 +384,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     Natural Environment Options
                   </label>
                   <p className="text-xs text-gray-500 mb-2">Choose where your product will be placed in the scene</p>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-1.5">
                     {selectedImage?.analysis?.naturalEnvironments ? (
-                      selectedImage.analysis.naturalEnvironments.slice(0, 6).map((environment, index) => (
+                      selectedImage.analysis.naturalEnvironments.slice(0, 9).map((environment, index) => (
                       <button
                         key={environment}
                         onClick={() => setSelectedEnvironment(environment)}
-                        className={`p-2 rounded-md border text-left text-sm transition-all ${
+                        className={`p-1.5 rounded-md border text-left text-xs transition-all ${
                           selectedEnvironment === environment
-                            ? 'bg-green-100 border-green-500 text-green-900 ring-2 ring-green-200'
+                            ? 'bg-green-100 border-green-500 text-green-900 ring-1 ring-green-200'
                             : 'bg-gray-50 border-gray-300 text-gray-700 hover:bg-green-50 hover:border-green-400'
                         }`}
                       >
@@ -373,26 +440,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     ))}
                   </div>
                 </div>
-                
-                {/* I Know Better Button - Reset Analysis */}
-                {selectedImage?.analysis && (
-                  <div className="pt-3 border-t border-gray-200">
-                    <button
-                      onClick={() => {
-                        onResetAnalysis();
-                        // Clear selected environment when resetting
-                        setSelectedEnvironment(null);
-                      }}
-                      className="w-full py-2 px-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-md hover:bg-gray-100 hover:border-gray-400 transition-colors flex items-center justify-center gap-2"
-                    >
-                      <span>🎯</span>
-                      I know better
-                    </button>
-                    <p className="text-xs text-gray-500 mt-1 text-center">
-                      Reset AI analysis to manually enter product details
-                    </p>
-                  </div>
-                )}
               </div>
             )}
             
@@ -410,38 +457,57 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
       
-      {/* Generate Button - Always visible, disabled when no image */}
-      <div className="p-4 space-y-3">
-        {/* I Know Better Button - Only show when there's analysis */}
-        {selectedImage?.analysis && (
+      {/* Generate Button Row - Side by side */}
+      <div className="p-4">
+        <div className="flex gap-2">
+          {/* I Know Better Button - Only show when there's analysis */}
+          {selectedImage?.analysis && (
+            <button
+              onClick={onResetAnalysis}
+              disabled={isLoading}
+              className={`
+                flex-shrink-0 h-10 px-3 rounded-lg text-xs font-medium transition-all border border-gray-300 
+                ${isLoading 
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                  : 'bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400'
+                }
+              `}
+            >
+              ⚡ I Know Better
+            </button>
+          )}
+          
           <button
-            onClick={onResetAnalysis}
-            disabled={isLoading}
+            onClick={() => {
+              // If on analysis tab or natural environment selected, use single format generation
+              if (activeTab === 'analysis' || selectedEnvironment) {
+                onGenerate(selectedEnvironment || undefined);
+              } else {
+                // Multi-format generation from format selection
+                if (selectedFormats.length > 0) {
+                  // Pass selected formats for multi-generation
+                  onGenerate(selectedFormats);
+                } else {
+                  // No formats selected, use single Natural Environment generation
+                  onGenerate(selectedEnvironment || undefined);
+                }
+              }
+            }}
+            disabled={isLoading || !selectedImage}
             className={`
-              w-full h-8 px-4 rounded-md text-xs font-medium transition-all border border-gray-300 
-              ${isLoading 
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                : 'bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400'
+              flex-1 h-10 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-1.5
+              ${isLoading || !selectedImage
+                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                : 'bg-pink-500 text-white hover:bg-pink-600'
               }
             `}
           >
-            ⚡ I Know Better (Start Over)
+            {!isLoading && <SparklesIcon className="w-4 h-4" />}
+            {isLoading ? 'Generating...' : 
+             selectedFormats.length > 0 ? `Generate ${selectedFormats.length} Ad${selectedFormats.length > 1 ? 's' : ''}` :
+             'Generate'}
           </button>
-        )}
-        
-        <button
-          onClick={() => onGenerate(selectedEnvironment || undefined)}
-          disabled={isLoading || !selectedImage}
-          className={`
-            h-10 px-8 rounded-lg font-medium transition-all mx-auto block
-            ${isLoading || !selectedImage
-              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              : 'bg-pink-500 text-white hover:bg-pink-600'
-            }
-          `}
-        >
-          {isLoading ? 'Generating...' : 'Generate Ad'}
-        </button>
+        </div>
       </div>
     </aside>
   );

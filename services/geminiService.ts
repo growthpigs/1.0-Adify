@@ -119,12 +119,16 @@ export const generateAdMockup = async (imageFile: File, basePrompt: string, slog
     const qualityNote = `IMPORTANT: Create a professional, high-quality mockup suitable for commercial use. Focus on clean, tasteful promotional material with excellent composition and lighting.`;
     
     const aspectRatioRequirement = `
-    🚨 CRITICAL ASPECT RATIO REQUIREMENTS 🚨
-    - Output must be EXACTLY SQUARE (1:1 aspect ratio) - no exceptions
-    - If input image is rectangular, crop/compose to square format
-    - Never maintain original aspect ratio - always output square
-    - Think "Instagram post" - always square, never rectangular
-    - Final dimensions should be equal width and height
+    🚨🚨🚨 ABSOLUTE MANDATORY SQUARE OUTPUT REQUIREMENT 🚨🚨🚨
+    - CRITICAL: Output image MUST be perfectly square (1:1 aspect ratio) - NO EXCEPTIONS
+    - EXACT DIMENSIONS: Width = Height (e.g., 1024x1024, 512x512, 768x768)
+    - If input is rectangular, ADD PADDING (letterbox/pillarbox) to make it square
+    - NEVER preserve the original aspect ratio of the input - ALWAYS force square
+    - Think Instagram post format - ALWAYS 1:1 square like all social media posts
+    - Width and height must be IDENTICAL in final output
+    - This is NON-NEGOTIABLE - square output is REQUIRED regardless of input format
+    - REJECT any attempt to output wide/tall images - FORCE SQUARE ALWAYS
+    - Add background/padding if needed to achieve perfect 1:1 ratio
     `;
 
     const fullPrompt = `${imagePreservationPrompt}
@@ -233,7 +237,7 @@ export const editImage = async (imageDataUrl: string, editPrompt: string): Promi
     
     try {
         const imagePart = await dataUrlToGenerativePart(imageDataUrl);
-        const textPart = { text: `${editPrompt}. 🚨 CRITICAL: The final output image must be EXACTLY SQUARE (1:1 aspect ratio). If the current image is not square, crop or recompose it to be perfectly square. Think "Instagram post" - always square, never rectangular.` };
+        const textPart = { text: `${editPrompt}. 🚨🚨🚨 MANDATORY: The final output image must be perfectly square (1:1 aspect ratio). If the current image is not square, ADD PADDING or CROP to make it square. Width and height must be identical. This is NON-NEGOTIABLE - square output is required regardless of input format.` };
 
         const response = await getAi().models.generateContent({
             model: 'gemini-2.5-flash-image-preview',
@@ -365,7 +369,7 @@ Return a valid JSON object with this structure:
   "suggestedTitle": "accurate title - for art use: 'Digital Art Creation' or similar",
   "detectedIndustry": "one of: saas, ecommerce, fashion, food_beverage, fitness_wellness, technology, b2b_services, automotive, real_estate, education, healthcare, finance, entertainment, travel, home_garden",
   "recommendedAudiences": ["array of up to 4 - MUST include creative_professionals, artists_designers for any artistic content"],
-  "naturalEnvironments": ["array of exactly 6 SPECIFIC PHYSICAL LOCATIONS like 'modern office desk', 'coffee shop table', 'kitchen counter', 'rooftop terrace', 'cozy reading nook', 'outdoor garden table'"],
+  "naturalEnvironments": ["array of exactly 9 SPECIFIC PHYSICAL LOCATIONS like 'modern office desk', 'coffee shop table', 'kitchen counter', 'rooftop terrace', 'cozy reading nook', 'outdoor garden table', 'bedroom nightstand', 'city park bench', 'home studio workspace'"],
   "userStory": "A factual description of the visual elements, style, and artistic technique visible in the image",
   "confidence": 85
 }`;

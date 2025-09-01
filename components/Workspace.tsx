@@ -198,21 +198,21 @@ export const Workspace: React.FC<WorkspaceProps> = (props) => {
 
   return (
     <div className="flex flex-col w-full h-full gap-4">
+        {sessionGallery.length > 0 && (
+            <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <h3 className="section-header mb-3">Session Variations</h3>
+                <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-2">
+                    {sessionGallery.map(renderGalleryItem)}
+                </div>
+            </div>
+        )}
+        
         <div className="flex-grow bg-white border border-gray-200 rounded-lg w-full min-h-[50vh] max-h-[60vh] flex items-center justify-center p-6">
             {renderContent()}
         </div>
         
         {isContentGenerated && (
              <EditingTools {...props} />
-        )}
-
-        {sessionGallery.length > 0 && (
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-                <h3 className="section-header mb-4">Session Variations</h3>
-                <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-4">
-                    {sessionGallery.map(renderGalleryItem)}
-                </div>
-            </div>
         )}
     </div>
   );

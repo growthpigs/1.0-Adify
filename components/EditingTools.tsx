@@ -72,7 +72,7 @@ export const EditingTools: React.FC<EditingToolsProps> = ({
         </button>
         <button 
             onClick={onRegenerateText} 
-            disabled={isLoading || isFacebookAd || !lastGenerationParams?.sloganType} 
+            disabled={isLoading || isFacebookAd || !lastGenerationParams} 
             className="btn-secondary-action flex-1 flex items-center justify-center gap-2 whitespace-nowrap"
         >
           <TextIcon className="w-4 h-4" />

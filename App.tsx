@@ -10,7 +10,7 @@ import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { Sidebar } from './components/Sidebar';
 import { Workspace } from './components/Workspace';
-import { SmartAnalysisPopup } from './components/SmartAnalysisPopup';
+import { AnalysisCompleteNotification } from './components/AnalysisCompleteNotification';
 import { AnalysisLoader } from './components/AnalysisLoader';
 import { GenerationLoader } from './components/GenerationLoader';
 import { GenerationProgress } from './components/GenerationProgress';
@@ -587,6 +587,40 @@ export const App: React.FC = () => {
         setImageDescription(newInput.description);
     };
 
+    const handleResetAnalysis = () => {
+        if (selectedImage) {
+            // Clear analysis from the selected image
+            const updatedImage = {
+                ...selectedImage,
+                analysis: undefined,
+                smartInput: undefined
+            };
+            
+            // Update the image library
+            setUploadedImages(prev => 
+                prev.map(img => img.id === selectedImage.id ? updatedImage : img)
+            );
+            
+            // Update selected image
+            setSelectedImage(updatedImage);
+            
+            // Reset smart input to clean state
+            setSmartInput({
+                title: '',
+                description: '',
+                industry: null,
+                targetAudiences: [],
+                isAnalysisConfirmed: false,
+                analysis: null
+            });
+            
+            // Clear description
+            setImageDescription('');
+            
+            toast.success('Analysis cleared! You can now set your own preferences.');
+        }
+    };
+
     const handleToggleRepositionMode = () => setIsRepositionMode(prev => !prev);
     const handleRepositionClick = (x: number, y: number) => {
         const prompt = `Keeping everything else the same, move the main text or slogan to be centered around the click coordinates (${x.toFixed(2)}, ${y.toFixed(2)}), where (0,0) is the top-left corner and (1,1) is the bottom-right corner of the image. The product placement should not change.`;
@@ -618,6 +652,7 @@ export const App: React.FC = () => {
                     onGenerateDescription={handleGenerateDescription}
                     selectedSloganType={selectedSloganType}
                     onSelectSloganType={setSelectedSloganType}
+                    onResetAnalysis={handleResetAnalysis}
                 />
                 <div className="flex-grow px-6 py-6">
                     <div className="flex-1 min-w-0">
@@ -662,79 +697,10 @@ export const App: React.FC = () => {
             {(loadingState === 'generating_image' || loadingState === 'generating_text') && <GenerationLoader />}
             
             {/* Smart Analysis Popup */}
-            {smartInput.analysis && (
-                <SmartAnalysisPopup
-                    analysis={smartInput.analysis}
-                    isVisible={showAnalysisPopup}
-                    isLoading={isLoading}
-                    onConfirm={handleAnalysisConfirm}
-                    onEdit={handleAnalysisEdit}
-                    onClose={handleAnalysisClose}
-                    selectedSloganType={selectedSloganType}
-                    onSelectSloganType={setSelectedSloganType}
-                    onUpdateAnalysis={(updates) => {
-                        setSmartInput(prev => ({
-                            ...prev,
-                            analysis: prev.analysis ? { ...prev.analysis, ...updates } : null
-                        }));
-                    }}
-                    onGenerate={async (selectedFormats) => {
-                        console.log('🌊 onGenerate in App.tsx called at', new Date().toISOString());
-                        console.log('📷 Current selectedImage:', selectedImage ? `${selectedImage.file.name}` : 'NULL');
-                        console.log('📄 Current imageDescription:', imageDescription);
-                        console.log('🧠 Current smartInput:', smartInput);
-                        
-                        // If no formats selected, use Natural Environment automatically
-                        let formatsToUse = selectedFormats;
-                        
-                        if (formatsToUse.length === 0) {
-                            // Auto-select Natural Environment for smart generation
-                            const naturalEnvFormat = AD_FORMATS.find(f => f.name === 'Natural Environment');
-                            if (naturalEnvFormat) {
-                                formatsToUse = [naturalEnvFormat];
-                                console.log('🌿 Auto-selected Natural Environment format');
-                            }
-                        }
-                        
-                        console.log('🎨 Formats to use:', formatsToUse.map(f => f.name));
-                        
-                        if (formatsToUse.length > 0 && selectedImage) {
-                            console.log('🔄 Setting format and starting generation...');
-                            // Set the first format and generate
-                            setSelectedFormat(formatsToUse[0]);
-                            
-                            // CRITICAL FIX: Call handleGenerate BEFORE closing popup
-                            // to ensure state is still available
-                            console.log('⚠️ Starting generation BEFORE closing popup');
-                            console.log('🔍 Current state:', {
-                                image: selectedImage?.file.name,
-                                format: formatsToUse[0].name,
-                                description: smartInput.description || imageDescription
-                            });
-                            
-                            // Start generation FIRST with the format directly
-                            console.log('🚀 Calling handleGenerate with format:', formatsToUse[0].name);
-                            try {
-                                // PASS THE FORMAT DIRECTLY to avoid async state issues
-                                await handleGenerate(formatsToUse[0]);
-                                console.log('✅ handleGenerate completed successfully');
-                            } catch (error) {
-                                console.error('❌ handleGenerate failed:', error);
-                            }
-                            
-                            // THEN close the popup
-                            console.log('🚪 Now closing popup...');
-                            setShowAnalysisPopup(false);
-                        } else {
-                            console.error('❌ Cannot generate:', {
-                                hasFormats: formatsToUse.length > 0,
-                                hasImage: !!selectedImage
-                            });
-                            toast.error(!selectedImage ? 'Please upload an image first' : 'Please select a format');
-                        }
-                    }}
-                />
-            )}
+            <AnalysisCompleteNotification
+                isVisible={showAnalysisPopup && !!smartInput.analysis}
+                onClose={() => setShowAnalysisPopup(false)}
+            />
             <Toaster 
                 position="top-right"
                 toastOptions={{

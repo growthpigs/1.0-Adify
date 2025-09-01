@@ -18,6 +18,7 @@ interface SidebarProps {
   onGenerateDescription: () => void;
   selectedSloganType: SloganType | null;
   onSelectSloganType: (type: SloganType | null) => void;
+  onResetAnalysis: () => void;
 }
 
 const MAX_DESC_LENGTH = 800;
@@ -46,6 +47,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onGenerateDescription,
   selectedSloganType,
   onSelectSloganType,
+  onResetAnalysis,
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('analysis');
   const [selectedFormats, setSelectedFormats] = useState<AdFormat[]>([]);
@@ -121,7 +123,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
           <label 
             htmlFor="sidebar-file-upload"
-            className="w-20 h-20 flex-shrink-0 bg-gray-50 rounded-lg flex items-center justify-center cursor-pointer border-2 border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-100 transition-colors"
+            className="w-14 h-14 flex-shrink-0 bg-gray-50 rounded-lg flex items-center justify-center cursor-pointer border-2 border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-100 transition-colors"
             aria-label="Upload new image"
           >
             <PlusIcon className="w-5 h-5 text-gray-400" />
@@ -138,7 +140,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div key={image.id} className="relative group flex-shrink-0">
               <button 
                 onClick={() => onSelectFromLibrary(image)}
-                className={`w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                className={`w-14 h-14 rounded-lg overflow-hidden border-2 transition-all ${
                   selectedImage?.id === image.id 
                     ? 'border-pink-500 ring-2 ring-pink-200' 
                     : 'border-gray-200 hover:border-gray-300'
@@ -165,26 +167,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Full Analysis Section with Tabs - Always visible */}
       <div className={`border-b border-gray-200 transition-opacity duration-200 ${!selectedImage ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
-        {/* Header - Always visible */}
-        <div className={`p-3 ${selectedImage?.analysis ? 'bg-blue-50 border-b border-blue-200' : 'bg-gray-50 border-b border-gray-200'}`}>
+        {/* Header - Always visible - Made thinner */}
+        <div className={`px-3 py-2 ${selectedImage?.analysis ? 'bg-blue-50 border-b border-blue-200' : 'bg-gray-50 border-b border-gray-200'}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <SparklesIcon className="w-4 h-4 text-pink-500" />
-              <h3 className="text-sm font-semibold text-gray-900">
+              <SparklesIcon className="w-3 h-3 text-pink-500" />
+              <h3 className="text-xs font-semibold text-gray-900">
                 {!selectedImage ? 'AI Analysis Ready' : selectedImage.analysis ? 'AI Analysis Complete' : 'Analyzing...'}
               </h3>
             </div>
-            {/* AI Confidence Badge */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-600">Confidence:</span>
+            {/* AI Confidence Badge - Smaller */}
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] text-gray-600">Confidence:</span>
               <div className="flex items-center gap-1">
-                <div className="w-12 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                <div className="w-8 h-1 bg-gray-200 rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-green-500 rounded-full transition-all duration-500"
                     style={{ width: selectedImage?.analysis ? `${selectedImage.analysis.confidence}%` : '0%' }}
                   />
                 </div>
-                <span className="text-xs font-bold text-green-700">
+                <span className="text-[10px] font-bold text-green-700">
                   {selectedImage?.analysis ? `${selectedImage.analysis.confidence}%` : '0%'}
                 </span>
               </div>
@@ -222,8 +224,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
           
-        {/* Tab Content - Always visible */}
-        <div className="p-4 max-h-[650px] overflow-y-auto">
+        {/* Tab Content - Always visible - Increased height to eliminate scrolling */}
+        <div className="p-4 max-h-[750px] overflow-y-auto">
           {activeTab === 'analysis' && (
               <div className="space-y-4">
                 {/* Product Title & Industry Row */}
@@ -283,7 +285,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <textarea
                   value={selectedImage?.description || selectedImage?.analysis?.userStory || ''}
                   className="w-full p-2 border border-gray-200 rounded-md text-sm resize-none"
-                  rows={3}
+                  rows={1}
                   placeholder="Image description will appear here"
                   readOnly
                   disabled={!selectedImage}
@@ -302,7 +304,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     ''
                   }
                   className="w-full p-2 border border-blue-200 bg-blue-50 rounded-md text-sm resize-none font-mono"
-                  rows={4}
+                  rows={2}
                   placeholder="AI generation instructions will appear here"
                   readOnly
                   disabled={!selectedImage}
@@ -317,7 +319,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <p className="text-xs text-gray-500 mb-2">Choose where your product will be placed in the scene</p>
                   <div className="grid grid-cols-2 gap-2">
                     {selectedImage?.analysis?.naturalEnvironments ? (
-                      selectedImage.analysis.naturalEnvironments.slice(0, 4).map((environment, index) => (
+                      selectedImage.analysis.naturalEnvironments.slice(0, 6).map((environment, index) => (
                       <button
                         key={environment}
                         onClick={() => setSelectedEnvironment(environment)}
@@ -338,7 +340,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     ))
                   ) : (
                     // Empty placeholders when no data
-                    [1, 2, 3, 4].map(i => (
+                    [1, 2, 3, 4, 5, 6].map(i => (
                       <button key={i} className="p-2 rounded-md border text-left text-sm bg-gray-100 border-gray-200" disabled>
                         <span className="text-gray-400">-</span>
                       </button>
@@ -371,6 +373,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     ))}
                   </div>
                 </div>
+                
+                {/* I Know Better Button - Reset Analysis */}
+                {selectedImage?.analysis && (
+                  <div className="pt-3 border-t border-gray-200">
+                    <button
+                      onClick={() => {
+                        onResetAnalysis();
+                        // Clear selected environment when resetting
+                        setSelectedEnvironment(null);
+                      }}
+                      className="w-full py-2 px-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-md hover:bg-gray-100 hover:border-gray-400 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <span>🎯</span>
+                      I know better
+                    </button>
+                    <p className="text-xs text-gray-500 mt-1 text-center">
+                      Reset AI analysis to manually enter product details
+                    </p>
+                  </div>
+                )}
               </div>
             )}
             
@@ -389,7 +411,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       
       {/* Generate Button - Always visible, disabled when no image */}
-      <div className="p-4">
+      <div className="p-4 space-y-3">
+        {/* I Know Better Button - Only show when there's analysis */}
+        {selectedImage?.analysis && (
+          <button
+            onClick={onResetAnalysis}
+            disabled={isLoading}
+            className={`
+              w-full h-8 px-4 rounded-md text-xs font-medium transition-all border border-gray-300 
+              ${isLoading 
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                : 'bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400'
+              }
+            `}
+          >
+            ⚡ I Know Better (Start Over)
+          </button>
+        )}
+        
         <button
           onClick={() => onGenerate(selectedEnvironment || undefined)}
           disabled={isLoading || !selectedImage}

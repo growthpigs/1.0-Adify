@@ -115,8 +115,17 @@ export const generateAdMockup = async (imageFile: File, basePrompt: string, slog
     Context: "${imageDescription}"
     `;
 
-    // Ensure professional output
+    // Ensure professional output with STRICT aspect ratio requirements
     const qualityNote = `IMPORTANT: Create a professional, high-quality mockup suitable for commercial use. Focus on clean, tasteful promotional material with excellent composition and lighting.`;
+    
+    const aspectRatioRequirement = `
+    🚨 CRITICAL ASPECT RATIO REQUIREMENTS 🚨
+    - Output must be EXACTLY SQUARE (1:1 aspect ratio) - no exceptions
+    - If input image is rectangular, crop/compose to square format
+    - Never maintain original aspect ratio - always output square
+    - Think "Instagram post" - always square, never rectangular
+    - Final dimensions should be equal width and height
+    `;
 
     const fullPrompt = `${imagePreservationPrompt}
     
@@ -128,9 +137,11 @@ export const generateAdMockup = async (imageFile: File, basePrompt: string, slog
     
     ${qualityNote}
     
+    ${aspectRatioRequirement}
+    
     FINAL REQUIREMENTS:
     - The uploaded image must be clearly visible in the final output
-    - Final output must be exactly square (1:1 aspect ratio)
+    - Final output must be EXACTLY SQUARE (1:1 aspect ratio) - NEVER rectangular
     - Only output the final modified image
     `;
 
@@ -222,7 +233,7 @@ export const editImage = async (imageDataUrl: string, editPrompt: string): Promi
     
     try {
         const imagePart = await dataUrlToGenerativePart(imageDataUrl);
-        const textPart = { text: `${editPrompt}. CRITICAL: Ensure the final output image is exactly square (1:1 aspect ratio).` };
+        const textPart = { text: `${editPrompt}. 🚨 CRITICAL: The final output image must be EXACTLY SQUARE (1:1 aspect ratio). If the current image is not square, crop or recompose it to be perfectly square. Think "Instagram post" - always square, never rectangular.` };
 
         const response = await getAi().models.generateContent({
             model: 'gemini-2.5-flash-image-preview',
@@ -354,7 +365,7 @@ Return a valid JSON object with this structure:
   "suggestedTitle": "accurate title - for art use: 'Digital Art Creation' or similar",
   "detectedIndustry": "one of: saas, ecommerce, fashion, food_beverage, fitness_wellness, technology, b2b_services, automotive, real_estate, education, healthcare, finance, entertainment, travel, home_garden",
   "recommendedAudiences": ["array of up to 4 - MUST include creative_professionals, artists_designers for any artistic content"],
-  "naturalEnvironments": ["array of 4-6 SPECIFIC PHYSICAL LOCATIONS like 'modern office desk', 'coffee shop table', 'kitchen counter', 'rooftop terrace'"],
+  "naturalEnvironments": ["array of exactly 6 SPECIFIC PHYSICAL LOCATIONS like 'modern office desk', 'coffee shop table', 'kitchen counter', 'rooftop terrace', 'cozy reading nook', 'outdoor garden table'"],
   "userStory": "A factual description of the visual elements, style, and artistic technique visible in the image",
   "confidence": 85
 }`;

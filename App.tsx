@@ -17,6 +17,7 @@ import { GenerationLoader } from './components/GenerationLoader';
 import { GenerationProgress } from './components/GenerationProgress';
 import { AppSkeleton } from './components/SkeletonLoader';
 import { ProductionStatusPanel } from './components/ProductionStatusPanel';
+import FloatingGenerateButton from './components/FloatingGenerateButton';
 
 export type LoadingState = 'idle' | 'describing' | 'generating_text' | 'generating_image' | 'editing';
 
@@ -228,6 +229,10 @@ export const App: React.FC = () => {
             console.log('⚠️ ALERT: selectedImage is null, skipping description');
         }
     }, [selectedImage, handleGenerateDescription]);
+
+    const handleScrollToTop = useCallback(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, []);
 
     const handleGenerate = useCallback(async (overrideFormatOrEnvironment?: AdFormat | string | AdFormat[]) => {
         console.log('🔥 HANDLEGENERATE ENTRY: Function called!');
@@ -1013,6 +1018,13 @@ export const App: React.FC = () => {
                         console.log('❌ No natural environments found!');
                     }
                 }}
+            />
+            <FloatingGenerateButton
+                hasImage={!!selectedImage}
+                selectedFormat={selectedFormat?.name || null}
+                isGenerating={loadingState !== 'idle'}
+                onGenerate={handleGenerate}
+                onScrollToTop={handleScrollToTop}
             />
             <Toaster 
                 position="top-right"

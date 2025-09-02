@@ -8,10 +8,14 @@ const getAi = (): GoogleGenAI => {
     if (aiInstance) {
         return aiInstance;
     }
-    if (!process.env.API_KEY) {
-        throw new Error("API_KEY environment variable not set. The app cannot connect to the AI service.");
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    console.log('API Key check:', apiKey ? `Found (${apiKey.substring(0, 10)}...)` : 'NOT FOUND');
+    console.log('All env vars:', import.meta.env);
+    
+    if (!apiKey) {
+        throw new Error("VITE_GEMINI_API_KEY environment variable not set. The app cannot connect to the AI service.");
     }
-    aiInstance = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    aiInstance = new GoogleGenAI({ apiKey });
     return aiInstance;
 };
 

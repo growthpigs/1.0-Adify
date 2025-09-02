@@ -14,10 +14,10 @@ import { AnalysisCompleteNotification } from './components/AnalysisCompleteNotif
 import { PlusIcon } from './components/Icons';
 import { AnalysisLoader } from './components/AnalysisLoader';
 import { GenerationLoader } from './components/GenerationLoader';
+import { EditingLoader } from './components/EditingLoader';
 import { GenerationProgress } from './components/GenerationProgress';
 import { AppSkeleton } from './components/SkeletonLoader';
 import { ProductionStatusPanel } from './components/ProductionStatusPanel';
-import FloatingGenerateButton from './components/FloatingGenerateButton';
 
 export type LoadingState = 'idle' | 'describing' | 'generating_text' | 'generating_image' | 'editing';
 
@@ -44,6 +44,7 @@ export const App: React.FC = () => {
     const [history, setHistory] = useState<(GeneratedContent | null)[]>([]);
     const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
     const [sessionGallery, setSessionGallery] = useState<GeneratedContent[]>([]);
+    const [bannerTab, setBannerTab] = useState<'uploads' | 'generations'>('uploads');
     const [lastGenerationParams, setLastGenerationParams] = useState<LastGenerationParams | null>(null);
     const [selectedFormat, setSelectedFormat] = useState<AdFormat | null>(null);
     const [selectedSloganType, setSelectedSloganType] = useState<SloganType | null>(null);
@@ -229,10 +230,6 @@ export const App: React.FC = () => {
             console.log('⚠️ ALERT: selectedImage is null, skipping description');
         }
     }, [selectedImage, handleGenerateDescription]);
-
-    const handleScrollToTop = useCallback(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, []);
 
     const handleGenerate = useCallback(async (overrideFormatOrEnvironment?: AdFormat | string | AdFormat[]) => {
         console.log('🔥 HANDLEGENERATE ENTRY: Function called!');
@@ -822,12 +819,36 @@ export const App: React.FC = () => {
         <div className="flex flex-col min-h-screen" style={{ backgroundColor: '#fefcf0' }}>
             <Header />
             
-            {/* Unified Banner - One continuous strip */}
+            {/* Unified Banner with Tab System */}
             <div className="bg-gray-50 border-b border-gray-200" style={{ height: '140px' }}>
-                <div className="flex">
-                    {/* Uploads Section (Left) */}
-                    <div className="w-[600px] xl:w-[600px] lg:w-[500px] md:w-[400px] sm:w-[350px] flex-shrink-0 px-4 pt-[8px] pb-[12px] border-r border-gray-200">
-                        <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-[6px] opacity-70">Uploads</h3>
+                <div className="px-4 pt-[6px] pb-[14px]">
+                    {/* Tab Headers */}
+                    <div className="flex gap-0 mb-[6px]" style={{ marginTop: '-2px', marginLeft: '-3px' }}>
+                        <button
+                            onClick={() => setBannerTab('uploads')}
+                            className={`text-xs font-medium uppercase tracking-wider transition-all px-3 ${
+                                bannerTab === 'uploads' 
+                                    ? 'text-gray-600' 
+                                    : 'text-gray-300 hover:text-gray-400'
+                            }`}
+                        >
+                            UPLOADS
+                        </button>
+                        <div className="w-px h-4 bg-gray-300/50 self-center" />
+                        <button
+                            onClick={() => setBannerTab('generations')}
+                            className={`text-xs font-medium uppercase tracking-wider transition-all px-3 ${
+                                bannerTab === 'generations' 
+                                    ? 'text-gray-600' 
+                                    : 'text-gray-300 hover:text-gray-400'
+                            }`}
+                        >
+                            GENERATIONS
+                        </button>
+                    </div>
+                    
+                    {/* Tab Content */}
+                    {bannerTab === 'uploads' ? (
                         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                             <label 
                                 htmlFor="unified-file-upload"
@@ -862,7 +883,7 @@ export const App: React.FC = () => {
                                         onClick={() => handleSelectFromLibrary(image)}
                                         className={`w-25 h-25 rounded-lg overflow-hidden border-2 transition-all ${
                                             selectedImage?.id === image.id 
-                                                ? 'border-yellow-500 ring-2 ring-yellow-200' 
+                                                ? 'border-gray-400' 
                                                 : 'border-gray-200 hover:border-gray-300'
                                         }`}
                                         aria-label="Select product image"
@@ -882,11 +903,8 @@ export const App: React.FC = () => {
                                 </div>
                             ))}
                         </div>
-                    </div>
-                    
-                    {/* Generations Section (Right) */}
-                    <div className="flex-grow px-4 pt-[8px] pb-[12px]">
-                        <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-[6px] opacity-70">Generations</h3>
+                    ) : (
+                        /* Generations Tab Content */
                         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                             {sessionGallery.length === 0 && (
                                 <div className="w-25 h-25 flex-shrink-0 bg-white rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
@@ -904,12 +922,13 @@ export const App: React.FC = () => {
                                 </button>
                             ))}
                         </div>
-                    </div>
+                    )}
                 </div>
             </div>
             
-            <main className="flex-grow flex">
-                <Sidebar
+            <main className="flex-grow flex bg-white">
+                <div className="w-[400px] flex flex-col h-full">
+                    <Sidebar
                     imageLibrary={uploadedImages}
                     generatedGallery={sessionGallery}
                     selectedImage={selectedImage}
@@ -925,12 +944,13 @@ export const App: React.FC = () => {
                     selectedSloganType={selectedSloganType}
                     onSelectSloganType={setSelectedSloganType}
                     onResetAnalysis={handleResetAnalysis}
-                    onReanalyze={handleReanalyze}
-                />
-                <div className="flex-grow px-6 py-6">
+                        onReanalyze={handleReanalyze}
+                    />
+                </div>
+                <div className="flex-grow bg-white">
                     <div className="flex-1 min-w-0">
                         {/* Generation Progress - only show when not using full-screen loader */}
-                        {loadingState !== 'generating_image' && loadingState !== 'generating_text' && (
+                        {loadingState !== 'generating_image' && loadingState !== 'generating_text' && loadingState !== 'editing' && (
                             <GenerationProgress 
                                 loadingState={loadingState}
                                 isNaturalEnvironment={isNaturalEnvironmentSelected}
@@ -972,6 +992,7 @@ export const App: React.FC = () => {
             {/* Loading Indicators */}
             {isAnalyzing && <AnalysisLoader />}
             {(loadingState === 'generating_image' || loadingState === 'generating_text') && <GenerationLoader />}
+            {loadingState === 'editing' && <EditingLoader />}
             
             {/* Production Status Panel for Multi-Format Generation */}
             <ProductionStatusPanel 
@@ -1018,13 +1039,6 @@ export const App: React.FC = () => {
                         console.log('❌ No natural environments found!');
                     }
                 }}
-            />
-            <FloatingGenerateButton
-                hasImage={!!selectedImage}
-                selectedFormat={selectedFormat?.name || null}
-                isGenerating={loadingState !== 'idle'}
-                onGenerate={handleGenerate}
-                onScrollToTop={handleScrollToTop}
             />
             <Toaster 
                 position="top-right"

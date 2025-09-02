@@ -1,9 +1,7 @@
-import React from 'react';
-import { ImageIcon, WarningIcon, UploadIcon, PlusIcon } from './Icons';
+import React, { useState, useEffect } from 'react';
 import { EditingTools } from './EditingTools';
-// FIX: Import LastGenerationParams to use in props.
 import { LoadingState, LastGenerationParams } from '../App';
-import { GeneratedContent, FacebookAdContent, MockupContent } from '../types';
+import { GeneratedContent, FacebookAdContent } from '../types';
 import { FacebookAdPreview } from './FacebookAdPreview';
 
 interface WorkspaceProps {
@@ -29,60 +27,52 @@ interface WorkspaceProps {
   onSelectFromGallery: (content: GeneratedContent) => void;
   onFacebookAdTextChange: (newContent: Partial<FacebookAdContent>) => void;
   onImageUpload: (file: File, previewUrl: string) => void;
-  // FIX: Add missing lastGenerationParams prop.
   lastGenerationParams: LastGenerationParams | null;
 }
 
-const LoadingIndicator: React.FC<{ state: LoadingState }> = ({ state }) => {
-    const messages = {
-        'generating_text': 'Peeling back the creative layers...',
-        'generating_image': 'Going bananas with your design...',
-        'editing': 'Adding the perfect split...',
-        'describing': 'Finding the ripest ideas...',
-        'idle': 'Warming up the banana stand...',
-    };
-    return (
-      <div className="flex flex-col items-center justify-center w-full h-full text-center rounded-lg">
-        <div className="relative w-32 h-32 mb-6">
-          {/* Banana Loading GIF */}
-          <img 
-            src="/banana-loading-trimmed.gif" 
-            alt="Loading..." 
-            className="w-full h-full object-contain"
-          />
+const ErrorState: React.FC<{ error: string }> = ({ error }) => (
+    <div className="flex items-center justify-center w-full h-full">
+        <div className="text-center p-6 max-w-md">
+            <div className="text-red-500 text-4xl mb-4">⚠️</div>
+            <h3 className="text-xl font-semibold text-gray-800 mb-2">Oops! Something went wrong</h3>
+            <p className="text-gray-600">{error}</p>
         </div>
-        <h3 className="text-2xl font-semibold text-yellow-600 mb-2">{messages[state]}</h3>
-        <p className="text-lg text-gray-600">Just a split second more...</p>
-      </div>
-    );
-};
+    </div>
+);
 
 const InitialState: React.FC<{ onImageUpload: (file: File, previewUrl: string) => void }> = ({ onImageUpload }) => {
+  // Add CSS for animation
+  React.useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes rock {
+        0%, 100% { transform: rotate(-5deg); }
+        50% { transform: rotate(5deg); }
+      }
+      .banana-rock {
+        animation: rock 3s ease-in-out infinite;
+        transform-origin: center;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
+  }, []);
+
   const handleFile = (file: File | undefined) => {
-    console.log('🔥 WORKSPACE: handleFile called with:', file ? file.name : 'null');
-    
     if (file && file.type.startsWith('image/')) {
-      console.log('✅ WORKSPACE: Valid image file, creating FileReader...');
       const reader = new FileReader();
       reader.onloadend = () => {
-        console.log('📖 WORKSPACE: FileReader finished, calling onImageUpload...');
         if (typeof reader.result === 'string') {
           onImageUpload(file, reader.result);
-          console.log('✅ WORKSPACE: onImageUpload called successfully');
         }
       };
       reader.readAsDataURL(file);
-    } else {
-      console.log('❌ WORKSPACE: Invalid file or not an image');
     }
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('📂 WORKSPACE: File input change event fired!');
     const selectedFile = event.target.files?.[0];
-    console.log('📁 WORKSPACE: Selected file:', selectedFile);
     handleFile(selectedFile);
-    // Reset the input so the same file can be selected again
     event.target.value = '';
   };
 
@@ -91,120 +81,116 @@ const InitialState: React.FC<{ onImageUpload: (file: File, previewUrl: string) =
   };
 
   const onDrop = (event: React.DragEvent<HTMLLabelElement>) => {
-    console.log('🎯 WORKSPACE: Drop event fired!');
     event.preventDefault();
     const droppedFile = event.dataTransfer.files?.[0];
-    console.log('📁 WORKSPACE: Dropped file:', droppedFile);
     handleFile(droppedFile);
   };
 
   return (
-    <div className="flex flex-col items-center justify-start text-center h-full" style={{paddingTop: '200px'}}>
-        <input
-          type="file"
-          id="workspace-file-upload"
-          onChange={handleFileChange}
-          className="hidden"
-          accept="image/png, image/jpeg, image/webp"
+    <label 
+      htmlFor="workspace-file-upload"
+      className="flex flex-col items-center justify-center w-full h-full border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 transition-colors"
+      style={{ backgroundColor: '#fafafa' }}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+    >
+      <input
+        id="workspace-file-upload"
+        type="file"
+        className="hidden"
+        accept="image/*"
+        onChange={handleFileChange}
+      />
+      <div className="w-[60px] h-[60px] mb-3 banana-rock">
+        <img 
+          src="/banana-icon.png"
+          alt="Banana"
+          className="w-full h-full opacity-30"
         />
-        <label 
-          htmlFor="workspace-file-upload"
-          onDragOver={onDragOver}
-          onDrop={onDrop}
-          className="flex flex-col items-center justify-center aspect-square w-full max-w-[400px] border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-yellow-500 hover:bg-gray-50 transition-colors"
-        >
-          <div className="flex flex-col items-center justify-center p-8">
-              <UploadIcon className="w-10 h-10 mb-4 text-gray-400" />
-              <p className="mb-2 text-xl content-subtitle">
-                <span className="font-semibold text-yellow-600">Click to upload</span> or drag and drop
-              </p>
-              <p className="text-sm footer-text">PNG, JPG, or WEBP (Max 4MB)</p>
-          </div>
-        </label>
-    </div>
+      </div>
+      <p className="text-gray-600 font-medium">Click to upload or drag and drop</p>
+      <p className="text-gray-500 text-sm mt-1">PNG, JPG, or WEBP (Max 4MB)</p>
+    </label>
   );
 };
 
-const ErrorState: React.FC<{ error: string }> = ({ error }) => {
-    const isSafetyError = error.includes('PROHIBITED_CONTENT') || error.includes('SAFETY');
-    const isPersonPhoto = error.includes('photos of people') || error.includes('privacy and consent');
-    return (
-      <div className="flex flex-col items-center justify-center text-center p-6">
-          <WarningIcon className="w-16 h-16 text-red-600 mb-6" />
-          <h3 className="section-header text-xl mb-4 text-red-600">Generation Failed</h3>
-          <div className="status-error max-w-md">{error}</div>
-          {isSafetyError && (
-              <div className="status-warning max-w-md mt-4 text-left">
-                  <h4 className="content-title mb-2">Safety Filter Detected</h4>
-                  <p className="content-subtitle mb-3">To get the best results, please try:</p>
-                  <ul className="list-disc list-inside space-y-1 content-subtitle">
-                      {isPersonPhoto && (
-                          <li><strong>For photos with people:</strong> Try the "Professional Portrait Frame" format which is designed to work better with personal photos.</li>
-                      )}
-                      <li>Select a simpler ad format (like "Urban Billboard" or "Magazine Ad").</li>
-                      <li>Use a product image without people if possible.</li>
-                      <li>Try a different slogan style (avoid provocative language).</li>
-                  </ul>
-                   <p className="content-subtitle mt-3">The AI has strict safety filters for photos containing people to protect privacy and prevent misuse.</p>
-              </div>
-          )}
-      </div>
-    );
-};
-
-
 export const Workspace: React.FC<WorkspaceProps> = (props) => {
-  const { loadingState, generatedContent, error, isContentGenerated, isRepositionMode, onRepositionClick, sessionGallery, onSelectFromGallery, onImageUpload } = props;
+  const { 
+    loadingState, 
+    generatedContent, 
+    error, 
+    isRepositionMode, 
+    onRepositionClick, 
+    onImageUpload,
+    isContentGenerated 
+  } = props;
+
+  // Responsive width calculation: min 523px (2/3 of 785), max 785px
+  const [containerWidth, setContainerWidth] = useState(785);
+  
+  useEffect(() => {
+    const calculateWidth = () => {
+      const viewportWidth = window.innerWidth;
+      const sidebarWidth = 400;
+      const padding = 80; // Account for workspace padding
+      const availableWidth = viewportWidth - sidebarWidth - padding;
+      
+      // Scale between 650px (middle ground) and 785px (full)
+      const width = Math.min(785, Math.max(650, availableWidth));
+      setContainerWidth(width);
+    };
+    
+    calculateWidth();
+    window.addEventListener('resize', calculateWidth);
+    return () => window.removeEventListener('resize', calculateWidth);
+  }, []);
 
   const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
     if (!isRepositionMode || !generatedContent || 'headline' in generatedContent) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width; // 0 to 1
-    const y = (e.clientY - rect.top) / rect.height; // 0 to 1
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
     onRepositionClick(x, y);
   };
 
   const renderContent = () => {
-    // Don't show workspace loading indicator when full-screen popup loader is active
-    if (loadingState !== 'idle' && loadingState !== 'generating_image' && loadingState !== 'generating_text') {
-      return <LoadingIndicator state={loadingState} />;
-    }
     if (error) return <ErrorState error={error} />;
+    
     if (generatedContent) {
-        if ('headline' in generatedContent) { // It's a FacebookAdContent
-            return <FacebookAdPreview content={generatedContent} onTextChange={props.onFacebookAdTextChange} />
-        } else { // It's a MockupContent
-            return (
-                <img 
-                    src={generatedContent.imageUrl} 
-                    alt="Generated ad mockup" 
-                    className={`w-full h-full object-contain ${isRepositionMode ? 'cursor-crosshair' : ''}`}
-                    style={{border: '2px solid #d1d5db'}}
-                    onClick={handleImageClick}
-                />
-            );
-        }
+      if ('headline' in generatedContent) {
+        return <FacebookAdPreview content={generatedContent} onTextChange={props.onFacebookAdTextChange} />
+      } else {
+        return (
+          <img 
+            src={generatedContent.imageUrl} 
+            alt="Generated ad mockup" 
+            className={`w-full h-full object-contain ${isRepositionMode ? 'cursor-crosshair' : ''}`}
+            onClick={handleImageClick}
+          />
+        );
+      }
     }
+    
     return <InitialState onImageUpload={onImageUpload} />;
   };
 
-
   return (
-    <div className="flex flex-col w-full h-full">
-        {/* Main Content Area */}
-        <div className="flex-grow flex items-start justify-start p-6" style={{ paddingTop: '8px', paddingLeft: '8px' }}>
-            <div className="w-full h-full max-w-2xl">
-                {renderContent()}
-            </div>
+    <div className="flex flex-col h-full bg-white">
+      {/* Main Content Area - Square container for image */}
+      <div className="flex-1 flex items-start justify-start p-8">
+        <div className="aspect-square rounded-lg overflow-hidden" style={{ width: `${containerWidth}px` }}>
+          {renderContent()}
         </div>
-        
-        {isContentGenerated && (
-            <div className="flex items-start justify-start p-6" style={{ paddingTop: '0px', paddingLeft: '8px' }}>
-                <div className="w-full max-w-2xl">
-                    <EditingTools {...props} />
-                </div>
-            </div>
-        )}
+      </div>
+      
+      {/* Persistent Editing Tools at Bottom */}
+      <div className="border-t border-gray-200 flex justify-center">
+        <EditingTools 
+          {...props} 
+          isDisabled={!generatedContent}
+          containerWidth={containerWidth}
+        />
+      </div>
     </div>
   );
 };

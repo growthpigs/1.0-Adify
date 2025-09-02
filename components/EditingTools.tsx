@@ -1,6 +1,5 @@
-
-import React, { useState } from 'react';
-import { DownloadIcon, ImageIcon, MoveIcon, SparklesIcon, TextIcon } from './Icons';
+import React, { useState, useRef } from 'react';
+import { Sparkles, Type, Image, Plus, RotateCcw, Redo, Upload, ChevronDown, Send } from 'lucide-react';
 import { GeneratedContent } from '../types';
 import { LastGenerationParams } from '../App';
 
@@ -20,147 +19,216 @@ interface EditingToolsProps {
   onRegenerateText: () => void;
   onNewVariation: () => void;
   lastGenerationParams: LastGenerationParams | null;
+  isDisabled?: boolean;
 }
 
-const TABS = ['Adjust', 'Reposition'];
-
 export const EditingTools: React.FC<EditingToolsProps> = ({
-  generatedContent, onEdit, onUndo, onRedo, onReset, onUploadNew, canUndo, canRedo, isLoading, isRepositionMode, onToggleRepositionMode,
-  onRegenerateImage, onRegenerateText, onNewVariation, lastGenerationParams
+  generatedContent, 
+  onEdit, 
+  onUndo, 
+  onRedo, 
+  onReset, 
+  onUploadNew, 
+  canUndo, 
+  canRedo, 
+  isLoading,
+  onRegenerateImage, 
+  onRegenerateText, 
+  onNewVariation, 
+  lastGenerationParams,
+  isDisabled = false,
+  containerWidth = 785
 }) => {
-  const [activeTab, setActiveTab] = useState(0);
   const [adjustmentInput, setAdjustmentInput] = useState('');
+  const [showImageMenu, setShowImageMenu] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const isFacebookAd = generatedContent && 'headline' in generatedContent;
-  const generatedImage = generatedContent?.imageUrl || null;
-
-  const adjustments = [
-    { name: 'Enhance Quality', prompt: 'Rerender the user\'s product image within the scene at the highest possible fidelity. Enhance its details, sharpen its lines, and remove any pixelation or artifacts as if it were a vector graphic. The overall composition and style must remain the same.' },
-    { name: 'Blur Background', prompt: 'Apply a professional bokeh effect to blur the background, making the main subject stand out.' },
-    { name: 'Warmer Lighting', prompt: 'Adjust the color temperature to give the image a warmer, more inviting golden-hour feel.' },
-    { name: 'Studio Light', prompt: 'Re-light the image as if it were in a professional photo studio with clean, bright, and even lighting.' },
-  ];
+  const disabled = isDisabled || isLoading || isFacebookAd;
 
   const handleAdjustmentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (adjustmentInput.trim()) {
+    if (adjustmentInput.trim() && !isLoading) {
       onEdit(adjustmentInput);
       setAdjustmentInput('');
     }
   };
-  
-  const handleTabClick = (index: number) => {
-      if (isFacebookAd) return;
-      setActiveTab(index);
-      if (TABS[index] === 'Reposition') {
-          if(!isRepositionMode) onToggleRepositionMode();
-      } else {
-          if(isRepositionMode) onToggleRepositionMode();
+
+  const handleImageAction = (action: string) => {
+    setShowImageMenu(false);
+    if (action === 'replace') {
+      onUploadNew();
+    } else if (action === 'upload') {
+      fileInputRef.current?.click();
+    } else {
+      const prompts: Record<string, string> = {
+        'merge': 'Merge the uploaded image with the current image, blending them naturally',
+        'swap': 'Replace the main product with the new uploaded image while keeping the same style',
+        'overlay': 'Overlay the new image on top of the current image as a layer'
+      };
+      if (prompts[action]) {
+        onEdit(prompts[action]);
       }
-  }
-  
-  const regenerationButtonClasses = "flex-1 flex items-center justify-center gap-2 py-2 px-3 text-sm font-medium text-gray-700 bg-white rounded-md border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors";
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+        onEdit(`Add this image to the current design: ${base64.substring(0, 100)}...`);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6">
-      <h3 className="section-header mb-4">Generation Controls</h3>
-      {/* Regeneration Controls */}
-      <div className="flex items-center justify-between gap-4 mb-6">
-        <button onClick={onRegenerateImage} disabled={isLoading || isFacebookAd} className="btn-secondary-action flex-1 flex items-center justify-center gap-2 whitespace-nowrap">
-          <ImageIcon className="w-4 h-4" />
-          <span>Regen Image</span>
-        </button>
-        <button 
-            onClick={onRegenerateText} 
-            disabled={isLoading || isFacebookAd || !lastGenerationParams} 
-            className="btn-secondary-action flex-1 flex items-center justify-center gap-2 whitespace-nowrap"
+    <div className="bg-white space-y-2" style={{ width: `${containerWidth}px` }}>
+      {/* Tool Buttons Row */}
+      <div className="flex items-center justify-center gap-2 px-4">
+        <button
+          onClick={onNewVariation}
+          disabled={disabled}
+          className="px-3 py-2 text-sm text-gray-600 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+          title="New Variation"
         >
-          <TextIcon className="w-4 h-4" />
-          <span>Regen Text</span>
-        </button>
-        <button onClick={onNewVariation} disabled={isLoading || isFacebookAd} className="btn-secondary-neutral flex-1 flex items-center justify-center gap-2 whitespace-nowrap">
-          <SparklesIcon className="w-4 h-4" />
+          <Sparkles className="w-4 h-4" />
           <span>New Variation</span>
         </button>
-      </div>
+        
+        <button
+          onClick={onRegenerateText}
+          disabled={disabled || !lastGenerationParams}
+          className="px-3 py-2 text-sm text-gray-600 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+          title="New Text"
+        >
+          <Type className="w-4 h-4" />
+          <span>New Text</span>
+        </button>
+        
+        <button
+          onClick={onRegenerateImage}
+          disabled={disabled}
+          className="px-3 py-2 text-sm text-gray-600 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+          title="New Image"
+        >
+          <Image className="w-4 h-4" />
+          <span>New Image</span>
+        </button>
 
-      {/* Top Bar with Tabs and History */}
-      <div className="flex justify-between items-center border-t border-gray-200 pt-6">
-        <div>
-          <h4 className="content-title mb-2">Editing Mode</h4>
-          <div className="hidden sm:block">
-            <nav className="flex space-x-2" aria-label="Tabs">
-              {TABS.map((tab, index) => (
-                <button
-                  key={tab}
-                  onClick={() => handleTabClick(index)}
-                  disabled={isFacebookAd}
-                  className={`format-tab ${
-                    activeTab === index && !isFacebookAd ? 'format-tab-active' : 'format-tab-inactive'
-                  } disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </nav>
-          </div>
-        </div>
-        <div className="flex items-center space-x-2">
-            <button onClick={onUndo} disabled={!canUndo || isLoading} className="btn-secondary-neutral">Undo</button>
-            <button onClick={onRedo} disabled={!canRedo || isLoading} className="btn-secondary-neutral">Redo</button>
-        </div>
-      </div>
-      
-      <div className={`mt-4 ${isFacebookAd ? 'opacity-50' : ''}`}>
-        {activeTab === 0 && (
-          <div className="space-y-4">
-            <h4 className="content-title">Apply Professional Adjustment</h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                {adjustments.map(adj => (
-                    <button 
-                        key={adj.name} 
-                        onClick={() => onEdit(adj.prompt)}
-                        disabled={isLoading || isFacebookAd}
-                        className={`py-2 px-3 text-xs rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap ${
-                          adj.name === 'Enhance Quality' ? 'btn-secondary-action' : 'btn-secondary-neutral'
-                        }`}
-                    >
-                      {adj.name === 'Enhance Quality' && <SparklesIcon className="w-3 h-3" />}
-                      {adj.name}
-                    </button>
-                ))}
+        {/* Add Image Dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => setShowImageMenu(!showImageMenu)}
+            disabled={disabled}
+            className="flex items-center gap-1 px-3 py-2 text-sm text-gray-600 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add</span>
+            <ChevronDown className="w-3 h-3" />
+          </button>
+          
+          {showImageMenu && (
+            <div className="absolute right-0 bottom-full mb-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+              <button
+                onClick={() => handleImageAction('merge')}
+                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                Merge Images
+              </button>
+              <button
+                onClick={() => handleImageAction('swap')}
+                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                Swap Product
+              </button>
+              <button
+                onClick={() => handleImageAction('overlay')}
+                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                Overlay Image
+              </button>
+              <div className="border-t border-gray-200" />
+              <button
+                onClick={() => handleImageAction('replace')}
+                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                Replace All
+              </button>
             </div>
-            <form onSubmit={handleAdjustmentSubmit} className="flex gap-2">
-              <input
-                type="text"
-                value={adjustmentInput}
-                onChange={(e) => setAdjustmentInput(e.target.value)}
-                placeholder="Or describe an adjustment (e.g., 'change background to a forest')"
-                className="form-input flex-grow text-sm"
-                disabled={isLoading || isFacebookAd}
-              />
-              <button type="submit" disabled={isLoading || isFacebookAd || !adjustmentInput.trim()} className="btn-primary px-4 py-2">Apply</button>
-            </form>
-          </div>
-        )}
+          )}
+        </div>
 
-        {activeTab === 1 && !isFacebookAd && (
-          <div className="flex flex-col items-center justify-center text-center p-4 min-h-[120px]">
-              <MoveIcon className="w-8 h-8 mb-4 text-pink-500" />
-              <h4 className="content-title mb-2">Reposition Mode Active</h4>
-              <p className="content-subtitle">Click a location on the image above to move the slogan.</p>
-          </div>
-        )}
+        <div className="h-6 w-px bg-gray-200 mx-2" />
+
+        {/* History Controls */}
+        <button
+          onClick={onUndo}
+          disabled={!canUndo || disabled}
+          className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          title="Undo"
+        >
+          <RotateCcw className="w-4 h-4" />
+        </button>
+        
+        <button
+          onClick={onRedo}
+          disabled={!canRedo || disabled}
+          className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          title="Redo"
+        >
+          <Redo className="w-4 h-4" />
+        </button>
+
+        <div className="h-6 w-px bg-gray-200 mx-2" />
+
+        <button
+          onClick={onUploadNew}
+          disabled={disabled}
+          className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          title="Upload New Image"
+        >
+          <Upload className="w-4 h-4" />
+        </button>
       </div>
 
+      {/* Chat Input - Taller */}
+      <form onSubmit={handleAdjustmentSubmit} className="relative px-4 pb-4">
+        <textarea
+          value={adjustmentInput}
+          onChange={(e) => setAdjustmentInput(e.target.value)}
+          placeholder="Describe changes (e.g., 'make it brighter', 'add sunset background', 'change to summer theme')"
+          className="w-full px-4 pr-16 py-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-400 resize-none"
+          style={{ backgroundColor: '#fffef9' }}
+          disabled={disabled}
+          rows={2}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleAdjustmentSubmit(e);
+            }
+          }}
+        />
+        <button
+          type="submit"
+          disabled={disabled || !adjustmentInput.trim()}
+          className="absolute right-6 p-2.5 text-gray-500 hover:text-yellow-600 disabled:opacity-30 disabled:cursor-not-allowed"
+          style={{ top: '50%', transform: 'translateY(-50%)' }}
+        >
+          <Send className="w-5 h-5" />
+        </button>
+      </form>
 
-      {/* Bottom Action Buttons */}
-      <div className="border-t border-gray-200 mt-6 pt-4 flex items-center justify-between">
-         <div className="flex space-x-2">
-            <button onClick={onReset} disabled={!canUndo || isLoading} className="btn-secondary-alert">Reset</button>
-            <button onClick={onUploadNew} disabled={isLoading} className="btn-secondary-neutral">Upload New</button>
-         </div>
-      </div>
-   </div>
- );
-}
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileUpload}
+        className="hidden"
+      />
+    </div>
+  );
+};

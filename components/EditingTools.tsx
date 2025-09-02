@@ -18,6 +18,7 @@ interface EditingToolsProps {
   onRegenerateImage: () => void;
   onRegenerateText: () => void;
   onNewVariation: () => void;
+  containerWidth?: number;
   lastGenerationParams: LastGenerationParams | null;
   isDisabled?: boolean;
 }
@@ -123,7 +124,7 @@ export const EditingTools: React.FC<EditingToolsProps> = ({
           <button
             onClick={() => setShowImageMenu(!showImageMenu)}
             disabled={disabled}
-            className="flex items-center gap-1 px-3 py-2 text-sm text-gray-600 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <Plus className="w-4 h-4" />
             <span>Add</span>

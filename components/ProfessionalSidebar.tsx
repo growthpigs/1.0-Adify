@@ -123,6 +123,54 @@ export const ProfessionalSidebar: React.FC<ProfessionalSidebarProps> = ({
       <div className="flex-1 overflow-y-auto p-4">
         {activeTab === 'setup' && (
           <div className="space-y-6">
+            {/* Current Image */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-medium text-gray-900">Current Image</h3>
+                <label 
+                  htmlFor="sidebar-image-upload"
+                  className="text-xs text-yellow-600 hover:text-yellow-700 cursor-pointer font-medium"
+                >
+                  Upload New
+                </label>
+                <input
+                  id="sidebar-image-upload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        if (typeof reader.result === 'string') {
+                          onImageUpload(file, reader.result);
+                        }
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                    e.target.value = '';
+                  }}
+                />
+              </div>
+              {selectedImage ? (
+                <div className="aspect-square bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
+                  <img 
+                    src={selectedImage.previewUrl} 
+                    alt={selectedImage.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="aspect-square bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="text-2xl mb-2">📁</div>
+                    <div className="text-xs text-gray-500">No image selected</div>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* AI Analysis Status */}
             <div>
               <h3 className="text-sm font-medium text-gray-900 mb-3">AI Analysis</h3>
@@ -245,7 +293,7 @@ export const ProfessionalSidebar: React.FC<ProfessionalSidebarProps> = ({
             {/* Text Options */}
             <div>
               <h3 className="text-sm font-medium text-gray-900 mb-3">Text Style (Optional)</h3>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 {sloganTypes.map((type) => (
                   <button
                     key={type.id}
@@ -285,7 +333,7 @@ export const ProfessionalSidebar: React.FC<ProfessionalSidebarProps> = ({
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-sm">{format.icon}</span>
+                      <format.icon className="w-4 h-4 text-gray-600" />
                       <div>
                         <div className="font-medium leading-tight text-xs">{format.name}</div>
                       </div>
@@ -313,7 +361,7 @@ export const ProfessionalSidebar: React.FC<ProfessionalSidebarProps> = ({
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-sm">{format.icon}</span>
+                      <format.icon className="w-4 h-4 text-gray-600" />
                       <div>
                         <div className="font-medium leading-tight text-xs">{format.name}</div>
                       </div>
@@ -341,7 +389,7 @@ export const ProfessionalSidebar: React.FC<ProfessionalSidebarProps> = ({
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-sm">{format.icon}</span>
+                      <format.icon className="w-4 h-4 text-gray-600" />
                       <div>
                         <div className="font-medium leading-tight text-xs">{format.name}</div>
                       </div>

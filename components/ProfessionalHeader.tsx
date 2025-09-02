@@ -19,11 +19,16 @@ export const ProfessionalHeader: React.FC<ProfessionalHeaderProps> = ({
       <div className="flex items-center gap-6">
         {/* AutoBanana Logo */}
         <div className="flex items-center gap-3">
-          <img 
-            src="/autobanana-logo-final.svg" 
-            alt="AutoBanana" 
-            className="h-8 w-auto"
-          />
+          <button
+            onClick={() => onSectionChange?.('overview')}
+            className="hover:opacity-80 transition-opacity"
+          >
+            <img 
+              src="/autobanana-logo-final.svg" 
+              alt="AutoBanana" 
+              className="h-8 w-auto cursor-pointer"
+            />
+          </button>
           <div className="h-6 w-px bg-gray-300" />
         </div>
 
@@ -130,19 +135,48 @@ export const ProfessionalHeader: React.FC<ProfessionalHeaderProps> = ({
           </button>
 
           {showProfileMenu && (
-            <div className="absolute top-full mt-2 right-0 bg-white border border-gray-200 rounded-lg shadow-lg w-56 py-2 z-50">
+            <div className="absolute top-full mt-2 right-0 bg-white border border-gray-200 rounded-lg shadow-lg w-64 py-2 z-50">
               <div className="px-3 py-2 border-b border-gray-100">
                 <div className="text-sm font-medium text-gray-900">Roderick Andrews</div>
                 <div className="text-xs text-gray-500">roderick@autobanana.com</div>
               </div>
+              
               <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
                 <User className="w-4 h-4" />
-                <span>Profile</span>
+                <span>RI Profile</span>
               </button>
+              
+              <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                <Bell className="w-4 h-4" />
+                <div className="flex-1 text-left">
+                  <span>Notifications</span>
+                  <div className="text-xs text-gray-500">2 new messages</div>
+                </div>
+              </button>
+              
               <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
                 <Settings className="w-4 h-4" />
-                <span>Settings</span>
+                <span>Account Settings</span>
               </button>
+              
+              <div className="border-t border-gray-100 my-2">
+                <div className="px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  Quick Actions
+                </div>
+                <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                  <div className="w-4 h-4 bg-green-100 rounded-full flex items-center justify-center">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  </div>
+                  <span>Billing & Usage</span>
+                </button>
+                <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                  <div className="w-4 h-4 bg-blue-100 rounded-full flex items-center justify-center">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  </div>
+                  <span>Team Management</span>
+                </button>
+              </div>
+              
               <div className="border-t border-gray-100 mt-2 pt-2">
                 <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
                   <LogOut className="w-4 h-4" />

@@ -106,4 +106,5 @@ export interface SmartProductInput {
     targetAudience: TargetAudience | null;
     isAnalysisConfirmed: boolean;
     analysis: SmartProductAnalysis | null;
+    instructions?: string;
 }

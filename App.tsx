@@ -51,6 +51,12 @@ export const App: React.FC = () => {
     const [selectedSloganType, setSelectedSloganType] = useState<SloganType | null>(null);
     const [activeSection, setActiveSection] = useState<string>('overview');
     
+    // Debug: Log section changes and React version
+    React.useEffect(() => {
+        console.log('📍 ACTIVE SECTION CHANGED TO:', activeSection);
+        console.log('⚠️ REACT VERSION:', React.version);
+    }, [activeSection]);
+    
     // Smart Analysis State
     const [smartInput, setSmartInput] = useState<SmartProductInput>({
         title: '',

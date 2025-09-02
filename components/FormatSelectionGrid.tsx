@@ -43,7 +43,7 @@ export const FormatSelectionGrid: React.FC<FormatSelectionGridProps> = ({
                             Based on your product analysis
                         </span>
                     </div>
-                    <div className="grid grid-cols-3 gap-3 mb-6 p-4 bg-pink-50 rounded-lg border border-pink-200">
+                    <div className="grid grid-cols-3 gap-3 mb-6 p-4 bg-pink-50 rounded-lg border border-pink-200/80">
                         {recommendedFormats.map((format) => {
                             const Icon = format.icon;
                             const selected = isSelected(format);
@@ -99,7 +99,7 @@ export const FormatSelectionGrid: React.FC<FormatSelectionGridProps> = ({
                                 className={`p-3 rounded-lg border text-left transition-all duration-200 ${
                                     selected
                                         ? 'border-blue-400 bg-blue-50 shadow-lg ring-2 ring-blue-200'
-                                        : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                                        : 'border-gray-200/80 bg-white hover:border-gray-300/80 hover:bg-gray-50'
                                 }`}
                             >
                                 <div className="flex items-center justify-between mb-2">
@@ -121,7 +121,7 @@ export const FormatSelectionGrid: React.FC<FormatSelectionGridProps> = ({
             </div>
 
             {/* Quick Actions */}
-            <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+            <div className="flex items-center justify-between pt-4 border-t border-gray-200/80">
                 <div className="flex gap-2">
                     <button
                         onClick={() => recommendedFormats.forEach(format => {

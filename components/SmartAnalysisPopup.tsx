@@ -239,7 +239,7 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{backgroundColor: 'rgba(0, 0, 0, 0.5)'}}>
             <div ref={popupRef} className="bg-white rounded-xl shadow-xl w-[600px] h-[75vh] max-h-[85vh] flex flex-col overflow-hidden">
                 {/* Compact Header */}
-                <div className="p-3 border-b border-gray-200 bg-gray-50">
+                <div className="p-3 border-b border-gray-200/80 bg-gray-50">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <SparklesIcon className="w-4 h-4 text-yellow-500" />
@@ -264,7 +264,7 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
                 </div>
                 
                 {/* Tabs */}
-                <div className="border-b border-gray-200">
+                <div className="border-b border-gray-200/80">
                     <div className="flex">
                         {[
                             { id: 'analysis', name: 'Analysis' },
@@ -277,7 +277,7 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
                                 onClick={() => setActiveTab(tab.id as TabType)}
                                 className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                                     activeTab === tab.id 
-                                        ? 'border-yellow-500 text-yellow-700 bg-yellow-50' 
+                                        ? 'border-yellow-500/80 text-yellow-700 bg-yellow-50' 
                                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                                 }`}
                             >
@@ -303,7 +303,7 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
                                     <input
                                         value={editableTitle}
                                         onChange={(e) => setEditableTitle(e.target.value)}
-                                        className="w-full p-1.5 border border-gray-200 rounded text-sm font-semibold"
+                                        className="w-full p-1.5 border border-gray-200/80 rounded text-sm font-semibold"
                                         placeholder="Product name"
                                     />
                                 </div>
@@ -312,7 +312,7 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
                                     <select
                                         value={editableIndustry}
                                         onChange={(e) => setEditableIndustry(e.target.value as Industry)}
-                                        className="w-full p-1.5 border border-gray-200 rounded text-sm"
+                                        className="w-full p-1.5 border border-gray-200/80 rounded text-sm"
                                     >
                                         {Object.entries(INDUSTRY_LABELS).map(([key, label]) => (
                                             <option key={key} value={key}>{label}</option>
@@ -336,8 +336,8 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
                                                 onClick={() => toggleAudience(audience)}
                                                 className={`py-1 px-1.5 rounded text-[11px] text-center transition-all duration-200 ${
                                                     isSelected
-                                                        ? 'bg-yellow-100 border border-yellow-300 text-yellow-900'
-                                                        : 'bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-700'
+                                                        ? 'bg-yellow-100 border border-yellow-300/80 text-yellow-900'
+                                                        : 'bg-gray-50 border border-gray-200/80 hover:bg-gray-100 text-gray-700'
                                                 }`}
                                             >
                                                 <span className="block truncate">{AUDIENCE_LABELS[audience]}</span>
@@ -353,7 +353,7 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
                                 <textarea
                                     value={editableDescription}
                                     onChange={(e) => setEditableDescription(e.target.value)}
-                                    className="w-full p-2 border border-gray-200 rounded-md text-sm resize-none"
+                                    className="w-full p-2 border border-gray-200/80 rounded-md text-sm resize-none"
                                     rows={2}
                                     placeholder="What does this product do?"
                                 />
@@ -392,7 +392,7 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
                                                 className={`py-1.5 px-2 rounded-md border text-left text-xs leading-tight transition-all duration-200 ${
                                                     isSelected
                                                         ? 'bg-green-100 border-green-300 ring-2 ring-green-200 text-green-900'
-                                                        : 'bg-gray-50 border-gray-200 hover:bg-gray-100 text-gray-700'
+                                                        : 'bg-gray-50 border-gray-200/80 hover:bg-gray-100 text-gray-700'
                                                 }`}
                                             >
                                                 <div className="flex items-center justify-between">
@@ -478,7 +478,7 @@ export const SmartAnalysisPopup: React.FC<SmartAnalysisPopupProps> = ({
                 </div>
 
                 {/* Action Buttons */}
-                <div className="p-6 border-t border-gray-200">
+                <div className="p-6 border-t border-gray-200/80">
                     {activeTab === 'analysis' ? (
                         <div className="flex gap-3">
                             <button

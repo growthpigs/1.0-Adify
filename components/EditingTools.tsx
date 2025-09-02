@@ -131,7 +131,7 @@ export const EditingTools: React.FC<EditingToolsProps> = ({
           </button>
           
           {showImageMenu && (
-            <div className="absolute right-0 bottom-full mb-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+            <div className="absolute right-0 bottom-full mb-1 w-40 bg-white border border-gray-200/80 rounded-lg shadow-lg z-10">
               <button
                 onClick={() => handleImageAction('merge')}
                 className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
@@ -150,7 +150,7 @@ export const EditingTools: React.FC<EditingToolsProps> = ({
               >
                 Overlay Image
               </button>
-              <div className="border-t border-gray-200" />
+              <div className="border-t border-gray-200/80" />
               <button
                 onClick={() => handleImageAction('replace')}
                 className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
@@ -161,7 +161,7 @@ export const EditingTools: React.FC<EditingToolsProps> = ({
           )}
         </div>
 
-        <div className="h-6 w-px bg-gray-200 mx-2" />
+        <div className="h-6 w-px bg-gray-200/80 mx-2" />
 
         {/* History Controls */}
         <button
@@ -182,7 +182,7 @@ export const EditingTools: React.FC<EditingToolsProps> = ({
           <Redo className="w-4 h-4" />
         </button>
 
-        <div className="h-6 w-px bg-gray-200 mx-2" />
+        <div className="h-6 w-px bg-gray-200/80 mx-2" />
 
         <button
           onClick={onUploadNew}
@@ -200,7 +200,7 @@ export const EditingTools: React.FC<EditingToolsProps> = ({
           value={adjustmentInput}
           onChange={(e) => setAdjustmentInput(e.target.value)}
           placeholder="Describe changes (e.g., 'make it brighter', 'add sunset background', 'change to summer theme')"
-          className="w-full px-4 pr-16 py-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-400 resize-none"
+          className="w-full px-4 pr-16 py-3 text-base border border-gray-300/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-400 resize-none"
           style={{ backgroundColor: '#fffef9' }}
           disabled={disabled}
           rows={2}

@@ -819,115 +819,8 @@ export const App: React.FC = () => {
         <div className="flex flex-col min-h-screen" style={{ backgroundColor: '#fefcf0' }}>
             <Header />
             
-            {/* Unified Banner with Tab System */}
-            <div className="bg-gray-50 border-b border-gray-200" style={{ height: '140px' }}>
-                <div className="px-4 pt-[6px] pb-[14px]">
-                    {/* Tab Headers */}
-                    <div className="flex gap-0 mb-[6px]" style={{ marginTop: '-2px', marginLeft: '-3px' }}>
-                        <button
-                            onClick={() => setBannerTab('uploads')}
-                            className={`text-xs font-medium uppercase tracking-wider transition-all px-3 ${
-                                bannerTab === 'uploads' 
-                                    ? 'text-gray-600' 
-                                    : 'text-gray-300 hover:text-gray-400'
-                            }`}
-                        >
-                            UPLOADS
-                        </button>
-                        <div className="w-px h-4 bg-gray-300/50 self-center" />
-                        <button
-                            onClick={() => setBannerTab('generations')}
-                            className={`text-xs font-medium uppercase tracking-wider transition-all px-3 ${
-                                bannerTab === 'generations' 
-                                    ? 'text-gray-600' 
-                                    : 'text-gray-300 hover:text-gray-400'
-                            }`}
-                        >
-                            GENERATIONS
-                        </button>
-                    </div>
-                    
-                    {/* Tab Content */}
-                    {bannerTab === 'uploads' ? (
-                        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                            <label 
-                                htmlFor="unified-file-upload"
-                                className="w-25 h-25 flex-shrink-0 bg-white rounded-lg flex items-center justify-center cursor-pointer border-2 border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-100 transition-colors"
-                                aria-label="Upload new image"
-                            >
-                                <PlusIcon className="w-6 h-6 text-gray-400" />
-                                <input
-                                    id="unified-file-upload"
-                                    type="file"
-                                    onChange={(e) => {
-                                        const file = e.target.files?.[0];
-                                        if (file && file.type.startsWith('image/')) {
-                                            const reader = new FileReader();
-                                            reader.onloadend = () => {
-                                                if (typeof reader.result === 'string') {
-                                                    handleImageUpload(file, reader.result);
-                                                }
-                                            };
-                                            reader.readAsDataURL(file);
-                                        }
-                                        e.target.value = '';
-                                    }}
-                                    className="hidden"
-                                    accept="image/png, image/jpeg, image/webp"
-                                    disabled={loadingState !== 'idle'}
-                                />
-                            </label>
-                            {uploadedImages.map(image => (
-                                <div key={image.id} className="relative group flex-shrink-0">
-                                    <button 
-                                        onClick={() => handleSelectFromLibrary(image)}
-                                        className={`w-25 h-25 rounded-lg overflow-hidden border-2 transition-all ${
-                                            selectedImage?.id === image.id 
-                                                ? 'border-gray-400' 
-                                                : 'border-gray-200 hover:border-gray-300'
-                                        }`}
-                                        aria-label="Select product image"
-                                    >
-                                        <img src={image.previewUrl} alt="Product" className="w-full h-full object-cover" />
-                                    </button>
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleDeleteFromLibrary(image.id);
-                                        }}
-                                        className="absolute top-1 right-1 bg-gray-600 bg-opacity-80 text-white rounded w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-700"
-                                        aria-label="Delete image"
-                                    >
-                                        ×
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        /* Generations Tab Content */
-                        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                            {sessionGallery.length === 0 && (
-                                <div className="w-25 h-25 flex-shrink-0 bg-white rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
-                                    {/* Empty placeholder - no icon */}
-                                </div>
-                            )}
-                            {sessionGallery.map((content, index) => (
-                                <button
-                                    key={index}
-                                    onClick={() => handleSelectFromGallery(content)}
-                                    className="w-25 h-25 flex-shrink-0 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-yellow-500 focus:border-yellow-500 transition-all"
-                                    aria-label={`Select generation ${index + 1}`}
-                                >
-                                    <img src={content.imageUrl} alt={`Generation ${index + 1}`} className="w-full h-full object-cover" />
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </div>
-            
-            <main className="flex-grow flex bg-white">
-                <div className="w-[400px] flex flex-col h-full">
+            <main className="flex flex-1 bg-white">
+                <div className="w-[400px] flex flex-col">
                     <Sidebar
                     imageLibrary={uploadedImages}
                     generatedGallery={sessionGallery}
@@ -947,8 +840,7 @@ export const App: React.FC = () => {
                         onReanalyze={handleReanalyze}
                     />
                 </div>
-                <div className="flex-grow bg-white">
-                    <div className="flex-1 min-w-0">
+                <div className="flex-1 flex flex-col bg-white">
                         {/* Generation Progress - only show when not using full-screen loader */}
                         {loadingState !== 'generating_image' && loadingState !== 'generating_text' && loadingState !== 'editing' && (
                             <GenerationProgress 
@@ -983,7 +875,6 @@ export const App: React.FC = () => {
                             onImageUpload={handleImageUpload}
                             lastGenerationParams={lastGenerationParams}
                         />
-                    </div>
                 </div>
             </main>
             

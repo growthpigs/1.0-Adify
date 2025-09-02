@@ -89,7 +89,7 @@ const InitialState: React.FC<{ onImageUpload: (file: File, previewUrl: string) =
   return (
     <label 
       htmlFor="workspace-file-upload"
-      className="flex flex-col items-center justify-center w-full h-full border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 transition-colors"
+      className="flex flex-col items-center justify-center w-full h-full border-2 border-dashed border-gray-300/80 rounded-lg cursor-pointer hover:border-gray-400/80 transition-colors"
       style={{ backgroundColor: '#fafafa' }}
       onDragOver={onDragOver}
       onDrop={onDrop}
@@ -125,7 +125,7 @@ export const Workspace: React.FC<WorkspaceProps> = (props) => {
     isContentGenerated 
   } = props;
 
-  // Responsive width calculation: min 523px (2/3 of 785), max 785px
+  // Responsive width calculation: min 500px, max 785px
   const [containerWidth, setContainerWidth] = useState(785);
   
   useEffect(() => {
@@ -135,8 +135,8 @@ export const Workspace: React.FC<WorkspaceProps> = (props) => {
       const padding = 80; // Account for workspace padding
       const availableWidth = viewportWidth - sidebarWidth - padding;
       
-      // Scale between 650px (middle ground) and 785px (full)
-      const width = Math.min(785, Math.max(650, availableWidth));
+      // Scale between 500px (minimum for small screens) and 785px (full)
+      const width = Math.min(785, Math.max(500, availableWidth));
       setContainerWidth(width);
     };
     
@@ -176,20 +176,23 @@ export const Workspace: React.FC<WorkspaceProps> = (props) => {
 
   return (
     <div className="flex flex-col h-full bg-white">
-      {/* Main Content Area - Square container for image */}
+      {/* Main Content Area - Square container for image with tools directly below */}
       <div className="flex-1 flex items-start justify-start p-8">
-        <div className="aspect-square rounded-lg overflow-hidden" style={{ width: `${containerWidth}px` }}>
-          {renderContent()}
+        <div className="flex flex-col items-center">
+          {/* Square Image Container */}
+          <div className="aspect-square rounded-lg overflow-hidden" style={{ width: `${containerWidth}px` }}>
+            {renderContent()}
+          </div>
+          
+          {/* Persistent Editing Tools - Locked to image container */}
+          <div className="border-t border-gray-200/80 mt-4" style={{ width: `${containerWidth}px` }}>
+            <EditingTools 
+              {...props} 
+              isDisabled={!generatedContent}
+              containerWidth={containerWidth}
+            />
+          </div>
         </div>
-      </div>
-      
-      {/* Persistent Editing Tools at Bottom */}
-      <div className="border-t border-gray-200 flex justify-center">
-        <EditingTools 
-          {...props} 
-          isDisabled={!generatedContent}
-          containerWidth={containerWidth}
-        />
       </div>
     </div>
   );
